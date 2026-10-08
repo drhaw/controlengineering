@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Signal Flow Graph (SFG)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overflow-x: hidden; }
+        .svg-text { font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 16px; }
+        .svg-label { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: bold; }
+        .math-font { font-family: 'Times New Roman', Times, serif; }
+        .node-circle { fill: #1f2937; cursor: pointer; transition: all 0.2s; }
+        .node-circle:hover { r: 6; fill: #3b82f6; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .nav-scrollbar::-webkit-scrollbar { width: 6px; }
+        .nav-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        
+        /* Print Styles */
+        @media print {
+            body { background-color: white; }
+            .no-print, .md\:hidden, .sidebar, .topbar, .progress-bar, .nav-buttons { display: none !important; }
+            .print-full-width { width: 100% !important; max-width: 100% !important; flex: none !important; }
+            .glass-panel { border: none !important; box-shadow: none !important; }
+            .print-space { display: block !important; height: 350px; border: 2px dashed #94a3b8; margin-top: 20px; border-radius: 12px; position: relative; }
+            .print-space::after { content: "Ruang Jawapan / Answer Space"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #cbd5e1; font-size: 1.5rem; font-weight: bold; font-family: sans-serif;}
+            #root { height: auto !important; overflow: visible !important; }
+            .overflow-y-auto { overflow: visible !important; max-height: none !important; }
+            .min-h-screen { min-height: auto !important; }
+        }
+        .print-space { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const t = {
+            ms: {
+                title: "Tutor Signal Flow Graph",
+                subtitle: "Kejuruteraan Sistem Kawalan",
+                questionText: "Halaman",
+                of: "daripada",
+                score: "Skor Kategori",
+                selectAnswer: "Pilih Jawapan:",
+                correct: "Tahniah! Jawapan Betul.",
+                incorrect: "Maaf, jawapan kurang tepat.",
+                checkAnswer: "Semak Jawapan",
+                nextQuestion: "Seterusnya ➔",
+                understandBtn: "Saya Faham, Teruskan ➔",
+                completed: "Kategori Selesai! ✓",
+                noDiagram: "Tiada gambar rajah",
+                langToggle: "EN",
+                infoBadge: "NOTA PEMBELAJARAN",
+                quizBadge: "LATIHAN PENGUKUHAN",
+                startCategory: "Mula Belajar",
+                finishCourse: "Tahniah! Anda telah melengkapkan semua modul.",
+                correctAnswerWas: "Jawapan yang betul ialah:",
+                explanation: "Penerangan:",
+                printPdf: "Cetak sebagai PDF",
+                studentName: "Nama Pelajar:",
+                studentId: "No. Matrik:",
+                assessmentBadge: "TUGASAN AKHIR"
+            },
+            en: {
+                title: "Signal Flow Graph Tutor",
+                subtitle: "Control Systems Engineering",
+                questionText: "Page",
+                of: "of",
+                score: "Category Score",
+                selectAnswer: "Select Answer:",
+                correct: "Congratulations! Correct Answer.",
+                incorrect: "Sorry, incorrect answer.",
+                checkAnswer: "Check Answer",
+                nextQuestion: "Next ➔",
+                understandBtn: "I Understand, Continue ➔",
+                completed: "Category Completed! ✓",
+                noDiagram: "No diagram",
+                langToggle: "MS",
+                infoBadge: "LEARNING NOTE",
+                quizBadge: "EXERCISE",
+                startCategory: "Start Learning",
+                finishCourse: "Congratulations! You have completed all modules.",
+                correctAnswerWas: "The correct answer was:",
+                explanation: "Explanation:",
+                printPdf: "Print to PDF",
+                studentName: "Student Name:",
+                studentId: "Student ID:",
+                assessmentBadge: "FINAL ASSESSMENT"
+            }
+        };
+
+        const categories = [
+            { id: 'intro', title: { ms: '1. Asas Signal Flow Graph', en: '1. Basics of Signal Flow Graph' } },
+            { id: 'mason_guide', title: { ms: '2. Panduan Formula Mason', en: '2. Mason\'s Rule Guideline' } },
+            { id: 'conversion', title: { ms: '3. Rajah Blok ke SFG', en: '3. Block Diagram to SFG' } },
+            { id: 'mason', title: { ms: '4. Formula Mason (Mason\'s Rule)', en: '4. Mason\'s Gain Formula' } },
+            { id: 'exercise_basic', title: { ms: '5. Latihan: Laluan & Gelung', en: '5. Exercise: Paths & Loops' } },
+            { id: 'exercise_complex', title: { ms: '6. Latihan: Pengiraan Keseluruhan', en: '6. Exercise: Full Calculation' } },
+            { id: 'exercise_multipath', title: { ms: '7. Latihan: Pelbagai Laluan Hadapan', en: '7. Exercise: Multiple Forward Paths' } },
+            { id: 'assessment', title: { ms: '8. Penilaian Akhir (Tugasan)', en: '8. Final Assessment (Assignment)' } }
+        ];
+
+        const contentData = {
+            intro: [
+                {
+                    type: "info",
+                    title: { ms: "Apa itu Signal Flow Graph (SFG)?", en: "What is a Signal Flow Graph (SFG)?" },
+                    content: { 
+                        ms: "Signal Flow Graph (Graf Aliran Isyarat) ialah perwakilan visual bagi persamaan algebra linear. Ia lebih ringkas daripada rajah blok. Dua elemen utamanya ialah:\n\n1. Nodus (Nodes): Mewakili pembolehubah sistem (isyarat). Contoh: X1, X2.\n2. Cabang (Branches): Mewakili gandaan (gain) atau fungsi pindah antara dua nodus. Ia mempunyai arah (anak panah).", 
+                        en: "A Signal Flow Graph is a visual representation of linear algebraic equations. It is simpler than block diagrams. Its two main elements are:\n\n1. Nodes: Represent system variables (signals). Example: X1, X2.\n2. Branches: Represent the gain or transfer function between two nodes. They have a direction (arrow)." 
+                    },
+                    diagram: "sfg_basic"
+                },
+                {
+                    type: "info",
+                    title: { ms: "Peraturan Aliran (Flow Rules)", en: "Flow Rules" },
+                    content: { 
+                        ms: "• Nilai pada sesuatu nodus adalah JUMLAH semua isyarat yang masuk ke nodus tersebut.\n• Isyarat akan didarab dengan gandaan cabang semasa ia bergerak dari satu nodus ke nodus lain.\n• Isyarat yang keluar dari nodus akan membawa nilai nodus tersebut ke semua cabang yang bersambung dengannya.", 
+                        en: "• The value of a node is the SUM of all incoming signals to that node.\n• A signal is multiplied by the branch gain as it travels from one node to another.\n• A signal leaving a node carries the node's value along all connected outgoing branches." 
+                    },
+                    diagram: "sfg_rules"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Pemahaman Asas", en: "Question 1: Basic Understanding" },
+                    q: { ms: "Dalam Signal Flow Graph, apakah yang diwakili oleh sebuah Nodus (Node)?", en: "In a Signal Flow Graph, what does a Node represent?" },
+                    options: {
+                        ms: ["Fungsi Pindah (Transfer Function)", "Pembolehubah Sistem / Isyarat (System Variable)", "Gandaan (Gain)", "Titik Penjumlah (Summing Junction) sahaja"],
+                        en: ["Transfer Function", "System Variable / Signal", "Gain", "Summing Junction only"]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Dalam SFG, nodus (bulatan) mewakili pembolehubah atau isyarat sistem (seperti X1, X2, voltan, kelajuan). Fungsi Pindah atau gandaan pula diwakili oleh cabang (garisan).",
+                        en: "In SFG, a node (circle) represents a system variable or signal (like X1, X2, voltage, speed). Transfer Functions or gains are represented by branches (lines)."
+                    },
+                    diagram: "none"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 2: Operasi Nodus", en: "Question 2: Node Operation" },
+                    q: { ms: "Berdasarkan rajah operasi nodus (X2), bagaimanakah nilai isyarat pada nodus dikira jika terdapat pelbagai isyarat masuk?", en: "Based on the node operation diagram (X2), how is the signal value at a node calculated if there are multiple incoming signals?" },
+                    options: {
+                        ms: ["Didarabkan semua isyarat masuk", "Ditambahkan semua isyarat masuk", "Ditolak antara satu sama lain", "Diabaikan isyarat yang lemah"],
+                        en: ["Multiply all incoming signals", "Sum of all incoming signals", "Subtract from each other", "Ignore weak signals"]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Hukum asas SFG menyatakan bahawa isyarat pada sesuatu nodus ialah hasil tambah algebra semua isyarat yang masuk kepadanya. Contohnya X2 = aX1 + bX3.",
+                        en: "The fundamental law of SFG states that the signal at a node is the algebraic sum of all signals entering it. For example, X2 = aX1 + bX3."
+                    },
+                    diagram: "sfg_rules"
+                }
+            ],
+            mason_guide: [
+                {
+                    type: "info",
+                    title: { ms: "Pendekatan Sistematik (Systematic Approach)", en: "Systematic Approach" },
+                    content: { 
+                        ms: "Untuk menyelesaikan masalah Signal Flow Graph menggunakan Formula Mason, ikuti langkah-langkah sistematik ini:\n\n1. Kira gandaan laluan hadapan (Pᵢ) untuk setiap laluan hadapan i.\n2. Kira semua fungsi pindah gelung (loop transfer functions).\n3. Pertimbangkan gelung tidak bersentuh (non-touching loops) 2 pada satu masa.\n4. Pertimbangkan gelung tidak bersentuh 3 pada satu masa.\n5. Dan seterusnya (jika ada).\n6. Kira Δ daripada langkah 2, 3, 4 dan 5.\n7. Kira Δᵢ sebagai bahagian Δ yang TIDAK menyentuh laluan hadapan i.", 
+                        en: "To solve Signal Flow Graph problems using Mason's Rule, follow this systematic approach:\n\n1. Calculate forward path gain Pᵢ for each forward path i.\n2. Calculate all loop transfer functions.\n3. Consider non-touching loops 2 at a time.\n4. Consider non-touching loops 3 at a time.\n5. etc.\n6. Calculate Δ from steps 2, 3, 4 and 5.\n7. Calculate Δᵢ as portion of Δ not touching forward path i." 
+                    },
+                    diagram: "none"
+                },
+                {
+                    type: "info",
+                    title: { ms: "Memahami Formula Mason", en: "Deconstructing Mason's Formula" },
+                    content: { 
+                        ms: "Formula Mason mungkin kelihatan rumit, tetapi ia boleh dipecahkan kepada empat bahagian utama:\n\n• T(s): Nisbah output sistem kepada inputnya (Fungsi Pindah Keseluruhan).\n• Pₖ: Hasil darab semua gandaan cabang di sepanjang laluan hadapan ke-k.\n• Δ: Penentu sistem (System Determinant). Boleh dianggap sebagai 'geseran dalaman' sistem daripada semua maklum balas.\n• Δₖ: Kofaktor. Ia adalah nilai Δ untuk bahagian graf yang TIDAK menyentuh laluan hadapan ke-k.", 
+                        en: "Mason's Formula might look complex, but it can be broken down into four main parts:\n\n• T(s): The ratio of the system's output to its input (Overall Transfer Function).\n• Pₖ: The product of all branch gains along the k-th forward path.\n• Δ: The System Determinant. Think of this as the system's 'internal friction' from all feedback loops.\n• Δₖ: The Cofactor. It is the value of Δ for the part of the graph that does NOT touch the k-th forward path." 
+                    },
+                    diagram: "mason_deconstruct"
+                }
+            ],
+            conversion: [
+                {
+                    type: "info",
+                    title: { ms: "Menukar Rajah Blok kepada SFG", en: "Converting Block Diagram to SFG" },
+                    content: { 
+                        ms: "Proses penukaran:\n1. Titik Input, Output, Titik Penjumlah (Summing Junctions), dan Titik Cabang (Pick-off) menjadi NODUS.\n2. Blok menjadi CABANG dengan nilai gandaan blok tersebut.\n3. Garisan terus tanpa blok diberi gandaan '1'.\n4. Tanda negatif (-) pada titik penjumlah menjadi tanda negatif pada gandaan cabang yang masuk.", 
+                        en: "Conversion process:\n1. Input, Output, Summing Junctions, and Pick-off points become NODES.\n2. Blocks become BRANCHES with their block gain.\n3. Direct lines without blocks get a gain of '1'.\n4. A negative sign (-) at a summing junction becomes a negative sign on the incoming branch's gain." 
+                    },
+                    diagram: "conversion_info"
+                },
+                {
+                    type: "info",
+                    title: { ms: "Contoh: Suap Balik (Feedback)", en: "Example: Feedback Loop" },
+                    content: { 
+                        ms: "Lihat contoh di sebelah yang menunjukkan penukaran sistem suap balik. \n\nPerhatikan bagaimana:\n- Titik penjumlah (bulatan bersilang) menjadi Nodus X1.\n- Titik cabang menjadi Nodus X3.\n- Tanda tolak (-) pada titik penjumlah menyebabkan gandaan laluan maklum balas menjadi -H.", 
+                        en: "Observe the example showing the conversion of a feedback system. \n\nNotice how:\n- The summing junction (crossed circle) becomes Node X1.\n- The pick-off point becomes Node X3.\n- The minus sign (-) at the summing junction causes the feedback path gain to become -H." 
+                    },
+                    diagram: "conversion_quiz"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Pemetaan Nodus", en: "Question 1: Node Mapping" },
+                    q: { ms: "Dalam proses menukar Rajah Blok kepada SFG, elemen manakah dalam Rajah Blok yang TIDAK bertukar menjadi Nodus (titik)?", en: "In converting a Block Diagram to SFG, which element in the Block Diagram does NOT turn into a Node (dot)?" },
+                    options: {
+                        ms: ["Titik Penjumlah (Summing Junction)", "Isyarat Input/Output", "Blok Fungsi Pindah (G)", "Titik Cabang (Pick-off point)"],
+                        en: ["Summing Junction", "Input/Output Signal", "Transfer Function Block (G)", "Pick-off point"]
+                    },
+                    answer: 2,
+                    explanation: {
+                        ms: "Blok Fungsi Pindah bertukar menjadi CABANG (branch) beranak panah yang menghubungkan dua nodus, dan nilainya (G) menjadi gandaan cabang tersebut. Elemen lain menjadi nodus.",
+                        en: "A Transfer Function Block turns into a directional BRANCH connecting two nodes, and its value (G) becomes the branch gain. The other elements become nodes."
+                    },
+                    diagram: "conversion_info"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 2: Gandaan Gelung", en: "Question 2: Loop Gain" },
+                    q: { ms: "Berdasarkan contoh Suap Balik (Feedback) yang telah ditunjukkan sebelum ini. Apakah gandaan cabang (branch gain) bagi laluan maklum balas dari Nodus X3 ke Nodus X1?", en: "Based on the Feedback example shown previously. What is the branch gain for the feedback path from Node X3 to Node X1?" },
+                    options: {
+                        ms: ["H", "-H", "1", "-1"],
+                        en: ["H", "-H", "1", "-1"]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Oleh kerana rajah blok menunjukkan suap balik negatif (tanda tolak pada titik penjumlah), isyarat yang kembali melalui blok H mestilah bernilai negatif apabila ia masuk ke SFG. Oleh itu, gandaan cabang ialah -H.",
+                        en: "Since the block diagram shows negative feedback (minus sign at the summing junction), the signal returning through block H must be negative when it enters the SFG. Therefore, the branch gain is -H."
+                    },
+                    diagram: "conversion_quiz"
+                }
+            ],
+            mason: [
+                {
+                    type: "info",
+                    title: { ms: "Formula Mason", en: "Mason's Gain Formula" },
+                    content: { 
+                        ms: "Formula Mason digunakan untuk mencari Fungsi Pindah (Transfer Function, T) keseluruhan sistem secara terus dari SFG.\n\nT = (1 / Δ) * Σ (Pk * Δk)\n\nIstilah Penting:\n• Laluan Hadapan (Forward Path, Pk): Laluan dari input ke output tanpa melalui nodus yang sama lebih dari sekali.\n• Gelung (Loop, L): Laluan tertutup bermula dan berakhir pada nodus yang sama tanpa menyentuh mana-mana nodus lain lebih dari sekali.", 
+                        en: "Mason's Gain Formula is used to find the overall Transfer Function (T) directly from the SFG.\n\nT = (1 / Δ) * Σ (Pk * Δk)\n\nKey Terms:\n• Forward Path (Pk): A path from input to output without crossing any node more than once.\n• Loop (L): A closed path starting and ending at the same node without touching any other node more than once." 
+                    },
+                    diagram: "mason_formula"
+                },
+                {
+                    type: "info",
+                    title: { ms: "Pengiraan Delta (Δ)", en: "Calculating Delta (Δ)" },
+                    content: { 
+                        ms: "Δ (Penyebut / Determinant) dikira menggunakan formula:\n\nΔ = 1 - (Jumlah semua gelung individu) + (Jumlah hasil darab 2 gelung tidak bersentuh) - (Jumlah hasil darab 3 gelung tidak bersentuh) + ...\n\nGelung Tidak Bersentuh (Non-touching loops) ialah dua atau lebih gelung yang tidak berkongsi SEBARANG nodus yang sama.", 
+                        en: "Δ (Determinant) is calculated using the formula:\n\nΔ = 1 - (Sum of all individual loops) + (Sum of products of 2 non-touching loops) - (Sum of products of 3 non-touching loops) + ...\n\nNon-touching loops are two or more loops that do not share ANY common nodes." 
+                    },
+                    diagram: "mason_delta"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Definisi Laluan Hadapan", en: "Question 1: Forward Path Definition" },
+                    q: { ms: "Apakah syarat utama untuk sesuatu laluan itu dipanggil 'Laluan Hadapan' (Forward Path)?", en: "What is the main condition for a path to be called a 'Forward Path'?" },
+                    options: {
+                        ms: ["Ia mesti bermula dan berakhir pada nodus yang sama", "Ia mesti dari input ke output tanpa melepasi nodus yang sama lebih dari sekali", "Ia tidak boleh menyentuh mana-mana gelung (loop)", "Ia mesti mempunyai gandaan positif sahaja"],
+                        en: ["It must start and end at the same node", "It must go from input to output without crossing the same node more than once", "It must not touch any loop", "It must only have positive gains"]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Definisi 'Laluan Hadapan' (Forward Path) ialah laluan terus dari punca (input) ke sink (output) yang tidak menyilang atau melalui mana-mana nodus lebih daripada sekali.",
+                        en: "The definition of a 'Forward Path' is a direct path from a source (input) to a sink (output) that does not cross or pass through any node more than once."
+                    },
+                    diagram: "none"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 2: Gelung Tidak Bersentuh", en: "Question 2: Non-touching Loops" },
+                    q: { ms: "Dua gelung (loops) diklasifikasikan sebagai 'Tidak Bersentuh' (Non-touching) jika...", en: "Two loops are classified as 'Non-touching' if..." },
+                    options: {
+                        ms: ["Kedua-duanya mempunyai arah anak panah yang berbeza", "Kedua-duanya tidak berkongsi sebarang nodus yang sama", "Hasil tambah gandaannya adalah sifar", "Kedua-duanya berada pada laluan hadapan yang berbeza"],
+                        en: ["They have different arrow directions", "They do not share any common node", "The sum of their gains is zero", "They are on different forward paths"]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Syarat mutlak untuk gelung dikira 'Tidak Bersentuh' ialah ia sama sekali tidak boleh berkongsi sebarang titik/nodus di dalam graf. Jika ada satu nodus yang sama, ia dikira bersentuh.",
+                        en: "The absolute condition for loops to be considered 'Non-touching' is that they cannot share any single point/node in the graph at all. If they share even one node, they are touching."
+                    },
+                    diagram: "none"
+                }
+            ],
+            exercise_basic: [
+                {
+                    type: "info",
+                    title: { ms: "Pemerhatian Rajah Latihan", en: "Exercise Diagram Observation" },
+                    content: { 
+                        ms: "Sila teliti Graf Aliran Isyarat di sebelah. Anda akan ditanya beberapa soalan berpandukan rajah ini untuk mengenalpasti Laluan Hadapan (Forward Paths) dan Gelung (Loops).", 
+                        en: "Please carefully observe the Signal Flow Graph on the side. You will be asked several questions based on this diagram to identify Forward Paths and Loops." 
+                    },
+                    diagram: "exercise_1"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Bilangan Laluan Hadapan", en: "Question 1: Number of Forward Paths" },
+                    q: { ms: "Berapakah bilangan Laluan Hadapan (Forward Path) dari Input R ke Output Y?", en: "How many Forward Paths are there from Input R to Output Y?" },
+                    options: {
+                        ms: ["1", "2", "3", "Tiada"],
+                        en: ["1", "2", "3", "None"]
+                    },
+                    answer: 0,
+                    explanation: {
+                        ms: "Hanya terdapat SATU laluan lurus dari input R ke output Y tanpa melepasi mana-mana nodus dua kali, iaitu melalui laluan atas: R -> X1 -> X2 -> X3 -> X4 -> Y.",
+                        en: "There is only ONE straight path from input R to output Y without crossing any node twice, which is through the top path: R -> X1 -> X2 -> X3 -> X4 -> Y."
+                    },
+                    diagram: "exercise_1"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 2: Gandaan Laluan Hadapan", en: "Question 2: Forward Path Gain" },
+                    q: { ms: "Apakah gandaan (gain) bagi laluan hadapan tunggal tersebut (P1)?", en: "What is the gain of the single forward path (P1)?" },
+                    options: {
+                        ms: ["G1 + G2", "G1 * G2", "G1 * G2 * G3", "1 / (G1 * G2 * G3)"],
+                        en: ["G1 + G2", "G1 * G2", "G1 * G2 * G3", "1 / (G1 * G2 * G3)"]
+                    },
+                    answer: 2,
+                    explanation: {
+                        ms: "Gandaan laluan hadapan dikira dengan mendarabkan semua gandaan cabang di sepanjang laluan tersebut. P1 = (1) * (G1) * (G2) * (G3) * (1) = G1*G2*G3.",
+                        en: "Forward path gain is calculated by multiplying all branch gains along that path. P1 = (1) * (G1) * (G2) * (G3) * (1) = G1*G2*G3."
+                    },
+                    diagram: "exercise_1"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 3: Kenalpasti Gelung", en: "Question 3: Identify Loops" },
+                    q: { ms: "Berapakah bilangan gelung individu (individual loops) di dalam sistem ini?", en: "How many individual loops are in this system?" },
+                    options: {
+                        ms: ["1", "2", "3", "4"],
+                        en: ["1", "2", "3", "4"]
+                    },
+                    answer: 1, // L1 = -G1*H1, L2 = -G3*H2
+                    explanation: {
+                        ms: "Terdapat DUA gelung yang berputar kembali ke nodus asal. Gelung 1 (L1) = X1 -> X2 -> X1 (gandaan: -G1H1). Gelung 2 (L2) = X3 -> X4 -> X3 (gandaan: -G3H2).",
+                        en: "There are TWO loops that cycle back to their starting node. Loop 1 (L1) = X1 -> X2 -> X1 (gain: -G1H1). Loop 2 (L2) = X3 -> X4 -> X3 (gain: -G3H2)."
+                    },
+                    diagram: "exercise_1"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 4: Status Gelung", en: "Question 4: Loop Status" },
+                    q: { ms: "Adakah terdapat gelung yang TIDAK BERSENTUH (Non-touching loops) dalam rajah ini?", en: "Are there any NON-TOUCHING loops in this diagram?" },
+                    options: {
+                        ms: ["Ya, terdapat 2 gelung yang tidak bersentuh.", "Tidak, semua gelung berkongsi sekurang-kurangnya satu nodus."],
+                        en: ["Yes, there are 2 non-touching loops.", "No, all loops share at least one common node."]
+                    },
+                    answer: 0, // X1/X2 loop doesn't touch X3/X4 loop
+                    explanation: {
+                        ms: "Ya. Gelung L1 (pada nodus X1 dan X2) tidak mempunyai titik persilangan atau berkongsi nodus dengan Gelung L2 (pada nodus X3 dan X4).",
+                        en: "Yes. Loop L1 (on nodes X1 and X2) has no intersection point or shared nodes with Loop L2 (on nodes X3 and X4)."
+                    },
+                    diagram: "exercise_1"
+                }
+            ],
+            exercise_complex: [
+                {
+                    type: "info",
+                    title: { ms: "Pengiraan Akhir (Mason)", en: "Final Calculation (Mason)" },
+                    content: { 
+                        ms: "Mari kita gabungkan semua nilai dari latihan sebelum ini untuk menyelesaikan persamaan fungsi pindah penuh menggunakan formula Mason bagi rajah yang sama.", 
+                        en: "Let's combine all the values from the previous exercise to solve for the full transfer function using Mason's formula for the same diagram." 
+                    },
+                    diagram: "exercise_1"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Mengira Delta", en: "Question 1: Calculating Delta" },
+                    q: { ms: "Dengan L1 = -G1 H1 dan L2 = -G3 H2. Apakah persamaan yang betul untuk Delta (Δ)?", en: "Given L1 = -G1 H1 and L2 = -G3 H2. What is the correct equation for Delta (Δ)?" },
+                    formulaHint: {
+                        ms: "Formula: Δ = 1 - (ΣL₁) + (ΣL₂L₃) - ...",
+                        en: "Formula: Δ = 1 - (ΣL₁) + (ΣL₂L₃) - ..."
+                    },
+                    options: {
+                        ms: [
+                            "Δ = 1 + G1 H1 + G3 H2", 
+                            "Δ = 1 - G1 H1 - G3 H2 + (G1 G3 H1 H2)", 
+                            "Δ = 1 + G1 H1 + G3 H2 + (G1 G3 H1 H2)", 
+                            "Δ = 1 - G1 H1 - G3 H2"
+                        ],
+                        en: [
+                            "Δ = 1 + G1 H1 + G3 H2", 
+                            "Δ = 1 - G1 H1 - G3 H2 + (G1 G3 H1 H2)", 
+                            "Δ = 1 + G1 H1 + G3 H2 + (G1 G3 H1 H2)", 
+                            "Δ = 1 - G1 H1 - G3 H2"
+                        ]
+                    },
+                    answer: 2, // 1 - (L1+L2) + L1L2 = 1 - (-G1H1 - G3H2) + (-G1H1)(-G3H2) = 1 + G1H1 + G3H2 + G1G3H1H2
+                    explanation: {
+                        ms: "Formula: Δ = 1 - (L1 + L2) + (L1 * L2). Masukkan nilai: Δ = 1 - (-G1H1 - G3H2) + [(-G1H1)*(-G3H2)]. Apabila diselesaikan, tanda negatif akan menjadi positif: 1 + G1H1 + G3H2 + G1G3H1H2.",
+                        en: "Formula: Δ = 1 - (L1 + L2) + (L1 * L2). Substitute values: Δ = 1 - (-G1H1 - G3H2) + [(-G1H1)*(-G3H2)]. When resolved, negative signs become positive: 1 + G1H1 + G3H2 + G1G3H1H2."
+                    },
+                    diagram: "exercise_1"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 2: Pengiraan Delta_k", en: "Question 2: Delta_k Calculation" },
+                    q: { ms: "Bagi laluan hadapan tunggal P1, adakah ia menyentuh semua gelung? Apakah nilai Δ1?", en: "For the single forward path P1, does it touch all loops? What is the value of Δ1?" },
+                    options: {
+                        ms: ["Ya, ia menyentuh semua gelung. Δ1 = 1", "Tidak, ia tidak menyentuh L1. Δ1 = 1 + G1 H1", "Tidak, ia tidak menyentuh L2. Δ1 = 1 + G3 H2", "Ya, Δ1 = 0"],
+                        en: ["Yes, it touches all loops. Δ1 = 1", "No, it does not touch L1. Δ1 = 1 + G1 H1", "No, it does not touch L2. Δ1 = 1 + G3 H2", "Yes, Δ1 = 0"]
+                    },
+                    answer: 0,
+                    explanation: {
+                        ms: "Laluan hadapan P1 melalui SEMUA nodus dalam rajah (X1, X2, X3, X4). Oleh kerana ia menyentuh semua gelung, bahagian formula Δ1 untuk gelung yang 'tidak disentuh oleh laluan' adalah sifar. Jadi, Δ1 = 1 - 0 = 1.",
+                        en: "Forward path P1 passes through ALL nodes in the diagram (X1, X2, X3, X4). Because it touches all loops, the part of the Δ1 formula for loops 'untouched by the path' is zero. So, Δ1 = 1 - 0 = 1."
+                    },
+                    diagram: "exercise_1"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 3: Fungsi Pindah Akhir", en: "Question 3: Final Transfer Function" },
+                    q: { ms: "Berdasarkan pengiraan P1, Δ, dan Δ1, apakah Fungsi Pindah Keseluruhan (T = Y/R)?", en: "Based on the calculations of P1, Δ, and Δ1, what is the Overall Transfer Function (T = Y/R)?" },
+                    formulaHint: {
+                        ms: "Formula Mason: T = Σ(Pₖ · Δₖ) / Δ",
+                        en: "Mason's Formula: T = Σ(Pₖ · Δₖ) / Δ"
+                    },
+                    options: {
+                        ms: [
+                            "(G1 G2 G3) / (1 - G1 H1 - G3 H2)",
+                            "(G1 G2 G3) / (1 + G1 H1 + G3 H2 + G1 G3 H1 H2)",
+                            "(1 + G1 H1 + G3 H2) / (G1 G2 G3)",
+                            "G1 G2 G3 + G1 H1 + G3 H2"
+                        ],
+                        en: [
+                            "(G1 G2 G3) / (1 - G1 H1 - G3 H2)",
+                            "(G1 G2 G3) / (1 + G1 H1 + G3 H2 + G1 G3 H1 H2)",
+                            "(1 + G1 H1 + G3 H2) / (G1 G2 G3)",
+                            "G1 G2 G3 + G1 H1 + G3 H2"
+                        ]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Formula Mason ialah T = (P1 * Δ1) / Δ. Menggantikan nilai: T = [ (G1G2G3) * (1) ] / [ 1 + G1H1 + G3H2 + G1G3H1H2 ]. Ini memberikan jawapan (B).",
+                        en: "Mason's Formula is T = (P1 * Δ1) / Δ. Substituting the values: T = [ (G1G2G3) * (1) ] / [ 1 + G1H1 + G3H2 + G1G3H1H2 ]. This gives answer (B)."
+                    },
+                    diagram: "exercise_1"
+                }
+            ],
+            exercise_multipath: [
+                {
+                    type: "info",
+                    title: { ms: "Pelbagai Laluan Hadapan", en: "Multiple Forward Paths" },
+                    content: { 
+                        ms: "Dalam sistem yang lebih kompleks, mungkin terdapat lebih daripada satu Laluan Hadapan (Forward Path) dari input ke output. \n\nSila perhatikan graf di sebelah. Terdapat satu laluan yang 'melompat' (bypass) beberapa nodus.", 
+                        en: "In more complex systems, there might be more than one Forward Path from input to output. \n\nPlease observe the graph on the left. There is a path that 'bypasses' several nodes." 
+                    },
+                    diagram: "exercise_multipath"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Kenalpasti Laluan Hadapan", en: "Question 1: Identify Forward Paths" },
+                    q: { ms: "Berapakah bilangan Laluan Hadapan (Forward Path) dari Input R ke Output Y dalam sistem ini?", en: "How many Forward Paths are there from Input R to Output Y in this system?" },
+                    options: {
+                        ms: ["1", "2", "3", "4"],
+                        en: ["1", "2", "3", "4"]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Terdapat DUA laluan hadapan.\nP1: R ➔ X₁ ➔ X₂ ➔ X₃ ➔ X₄ ➔ Y (Laluan lurus)\nP2: R ➔ X₁ ➔ X₄ ➔ Y (Laluan ungu yang melengkung melangkau X₂ dan X₃)",
+                        en: "There are TWO forward paths.\nP1: R ➔ X₁ ➔ X₂ ➔ X₃ ➔ X₄ ➔ Y (Straight path)\nP2: R ➔ X₁ ➔ X₄ ➔ Y (Purple curved path bypassing X₂ and X₃)"
+                    },
+                    diagram: "exercise_multipath"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 2: Nilai Gandaan Laluan (P)", en: "Question 2: Path Gain Values (P)" },
+                    q: { ms: "Apakah nilai gandaan bagi kedua-dua laluan hadapan tersebut (P1 dan P2)?", en: "What are the gain values for the two forward paths (P1 and P2)?" },
+                    options: {
+                        ms: [
+                            "P1 = G1+G2+G3, P2 = G4", 
+                            "P1 = G1 G2 G3, P2 = G4", 
+                            "P1 = G1 G2, P2 = G3 G4", 
+                            "P1 = G1 G2 G3, P2 = G3 G4"
+                        ],
+                        en: [
+                            "P1 = G1+G2+G3, P2 = G4", 
+                            "P1 = G1 G2 G3, P2 = G4", 
+                            "P1 = G1 G2, P2 = G3 G4", 
+                            "P1 = G1 G2 G3, P2 = G3 G4"
+                        ]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Gandaan laluan ialah hasil darab semua cabang yang dilaluinya.\nP1 = (1) * (G1) * (G2) * (G3) * (1) = G1 G2 G3\nP2 = (1) * (G4) * (1) = G4",
+                        en: "Path gain is the product of all branches it passes through.\nP1 = (1) * (G1) * (G2) * (G3) * (1) = G1 G2 G3\nP2 = (1) * (G4) * (1) = G4"
+                    },
+                    diagram: "exercise_multipath"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 3: Mengira Delta_k (Δk)", en: "Question 3: Calculating Delta_k (Δk)" },
+                    q: { ms: "Laluan P2 (G4) melangkau nodus X2 dan X3. Gelung L1 (-G2 H1) berada pada X2 dan X3. Apakah nilai Δ2 bagi laluan P2?", en: "Path P2 (G4) bypasses nodes X2 and X3. Loop L1 (-G2 H1) is on X2 and X3. What is the value of Δ2 for path P2?" },
+                    formulaHint: {
+                        ms: "Petunjuk: Δk = 1 - (Jumlah gelung yang TIDAK disentuh oleh laluan Pk)",
+                        en: "Hint: Δk = 1 - (Sum of loops NOT touched by path Pk)"
+                    },
+                    options: {
+                        ms: [
+                            "Δ2 = 1", 
+                            "Δ2 = 0", 
+                            "Δ2 = 1 + G2 H1", 
+                            "Δ2 = 1 - G2 H1"
+                        ],
+                        en: [
+                            "Δ2 = 1", 
+                            "Δ2 = 0", 
+                            "Δ2 = 1 + G2 H1", 
+                            "Δ2 = 1 - G2 H1"
+                        ]
+                    },
+                    answer: 2,
+                    explanation: {
+                        ms: "Penting! Oleh kerana P2 (G4) TIDAK menyentuh gelung L1 sama sekali, kita mesti memasukkan L1 dalam pengiraan Δ2.\nΔ2 = 1 - (L1) = 1 - (-G2 H1) = 1 + G2 H1.\n(Nota: Untuk P1, ia melalui gelung tersebut, jadi Δ1 = 1 - 0 = 1).",
+                        en: "Important! Because P2 (G4) does NOT touch loop L1 at all, we must include L1 in the calculation of Δ2.\nΔ2 = 1 - (L1) = 1 - (-G2 H1) = 1 + G2 H1.\n(Note: For P1, it passes through the loop, so Δ1 = 1 - 0 = 1)."
+                    },
+                    diagram: "exercise_multipath"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 4: Fungsi Pindah Akhir (Pelbagai Laluan)", en: "Question 4: Final Transfer Function (Multiple Paths)" },
+                    q: { ms: "Dengan P1 = G1 G2 G3, Δ1 = 1, P2 = G4, Δ2 = (1 + G2 H1), dan Δ = (1 + G2 H1). Apakah Fungsi Pindah T = Y/R?", en: "Given P1 = G1 G2 G3, Δ1 = 1, P2 = G4, Δ2 = (1 + G2 H1), and Δ = (1 + G2 H1). What is the Transfer Function T = Y/R?" },
+                    formulaHint: {
+                        ms: "T = (P1·Δ1 + P2·Δ2) / Δ",
+                        en: "T = (P1·Δ1 + P2·Δ2) / Δ"
+                    },
+                    options: {
+                        ms: [
+                            "(G1 G2 G3 + G4) / (1 + G2 H1)",
+                            "(G1 G2 G3 + G4(1 + G2 H1)) / (1 + G2 H1)",
+                            "(G1 G2 G3) / (1 + G2 H1)",
+                            "(G4(1 + G2 H1)) / (1 + G2 H1)"
+                        ],
+                        en: [
+                            "(G1 G2 G3 + G4) / (1 + G2 H1)",
+                            "(G1 G2 G3 + G4(1 + G2 H1)) / (1 + G2 H1)",
+                            "(G1 G2 G3) / (1 + G2 H1)",
+                            "(G4(1 + G2 H1)) / (1 + G2 H1)"
+                        ]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Menggunakan Formula Mason yang lengkap untuk pelbagai laluan:\nPengangka (Numerator) = (P1 * Δ1) + (P2 * Δ2)\n= (G1 G2 G3 * 1) + (G4 * (1 + G2 H1))\nPenyebut (Denominator) = Δ = 1 + G2 H1.",
+                        en: "Using the complete Mason's Formula for multiple paths:\nNumerator = (P1 * Δ1) + (P2 * Δ2)\n= (G1 G2 G3 * 1) + (G4 * (1 + G2 H1))\nDenominator = Δ = 1 + G2 H1."
+                    },
+                    diagram: "exercise_multipath"
+                }
+            ],
+            assessment: [
+                {
+                    type: "assessment",
+                    title: { ms: "Tugasan Reka Bentuk SFG", en: "SFG Design Assignment" },
+                    content: { 
+                        ms: "Sebagai penilaian akhir, sila selesaikan tugasan di bawah. Sila isikan nama anda, cetak halaman ini sebagai PDF (Print to PDF), tunjukkan jalan kira pada ruang yang disediakan dan hantar kepada pensyarah anda.\n\nArahan Tugasan:\nGunakan Formula Mason (Mason's Rule) untuk mengira fungsi pindah (transfer function, T = C/R) bagi sistem yang diwakili oleh Signal Flow Graph di paparan visual bersebelahan.\n\nSila tunjukkan langkah pengiraan anda secara sistematik:\n1. Senaraikan semua Laluan Hadapan (P) dan nilai Gandaannya.\n2. Senaraikan semua Gelung (L).\n3. Kira nilai Penentu Sistem (Δ).\n4. Kira nilai Kofaktor (Δk) bagi setiap laluan hadapan.\n5. Tuliskan Fungsi Pindah (T) yang lengkap.", 
+                        en: "As a final assessment, please complete the assignment below. Fill in your name, print this page to PDF, show your calculations in the space provided, and submit it to your lecturer.\n\nAssignment Instructions:\nApply Mason’s Rule to calculate the transfer function (T = C/R) of the system represented by the Signal Flow Graph shown in the visual panel.\n\nPlease show your calculation steps systematically:\n1. List all Forward Paths (P) and their Gains.\n2. List all Loops (L).\n3. Calculate the System Determinant (Δ).\n4. Calculate the Cofactor (Δk) for each forward path.\n5. Write the complete Transfer Function (T)." 
+                    },
+                    diagram: "assessment_sfg"
+                }
+            ]
+        };
+
+        const DiagramViewer = ({ diagramType, lang }) => {
+            if (diagramType === "none") {
+                return (
+                    <div className="flex items-center justify-center h-full text-gray-400 italic">
+                        {t[lang].noDiagram}
+                    </div>
+                );
+            }
+
+            // Common arrow marker definition to be used in all SVGs
+            const arrowDef = (
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2937" />
+                    </marker>
+                    <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+                    </marker>
+                    <marker id="arrow-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#16a34a" />
+                    </marker>
+                    <marker id="arrow-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#ea580c" />
+                    </marker>
+                </defs>
+            );
+
+            switch (diagramType) {
+                case "mason_deconstruct":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 600 400" className="bg-[#fdfaf6]">
+                            {/* Central Formula Box */}
+                            <rect x="180" y="160" width="240" height="80" fill="transparent" stroke="#333" strokeWidth="1" />
+                            {/* Crosshairs */}
+                            <path d="M 175,155 L 185,155 M 175,165 L 185,165 M 175,235 L 185,235 M 175,245 L 185,245" stroke="#999" strokeWidth="1" />
+                            <path d="M 180,150 L 180,160 M 180,240 L 180,250 M 420,150 L 420,160 M 420,240 L 420,250" stroke="#999" strokeWidth="1" />
+                            <path d="M 415,155 L 425,155 M 415,165 L 425,165 M 415,235 L 425,235 M 415,245 L 425,245" stroke="#999" strokeWidth="1" />
+
+                            <text x="200" y="215" className="math-font text-3xl font-bold">T(s) = </text>
+                            
+                            <text x="300" y="195" textAnchor="middle" className="math-font text-2xl font-bold">1</text>
+                            <line x1="285" y1="205" x2="315" y2="205" stroke="#000" strokeWidth="2" />
+                            <text x="300" y="230" textAnchor="middle" className="math-font text-2xl font-bold">Δ</text>
+
+                            <text x="330" y="225" className="math-font text-4xl font-bold">Σ</text>
+                            
+                            <text x="365" y="215" className="math-font text-2xl font-bold text-blue-800">P<tspan dy="5" fontSize="14">k</tspan></text>
+                            <text x="390" y="215" className="math-font text-2xl font-bold text-red-700"><tspan dy="-5">Δ</tspan><tspan dy="5" fontSize="14">k</tspan></text>
+
+                            {/* T(s) Pointer */}
+                            <path d="M 220,175 L 220,100 L 205,100" fill="none" stroke="#666" strokeWidth="1.5" />
+                            <rect x="20" y="60" width="185" height="60" fill="#fdfaf6" stroke="#666" strokeWidth="1" />
+                            <text x="25" y="75" className="font-mono text-[10px] font-bold text-gray-800">Overall System Transfer Function</text>
+                            <text x="25" y="95" className="font-mono text-[9px] text-gray-600">The ratio of the system's output to</text>
+                            <text x="25" y="110" className="font-mono text-[9px] text-gray-600">its input in the Laplace domain.</text>
+
+                            {/* Pk Pointer */}
+                            <path d="M 375,180 L 375,100 L 390,100" fill="none" stroke="#666" strokeWidth="1.5" />
+                            <rect x="390" y="60" width="190" height="60" fill="#fdfaf6" stroke="#666" strokeWidth="1" />
+                            <text x="395" y="75" className="font-mono text-[10px] font-bold text-gray-800">Forward Path Gains</text>
+                            <text x="395" y="95" className="font-mono text-[9px] text-blue-800">The product of all branch gains along</text>
+                            <text x="395" y="110" className="font-mono text-[9px] text-blue-800">the k-th forward path.</text>
+
+                            {/* Delta Pointer */}
+                            <path d="M 300,240 L 300,320 L 255,320" fill="none" stroke="#666" strokeWidth="1.5" />
+                            <rect x="20" y="280" width="235" height="100" fill="#fdfaf6" stroke="#666" strokeWidth="1" />
+                            <text x="25" y="295" className="font-mono text-[10px] font-bold text-gray-800">The System Determinant</text>
+                            <text x="25" y="315" className="font-mono text-[9px] text-gray-800">Think of this as the system's <tspan className="text-red-800">internal</tspan></text>
+                            <text x="25" y="327" className="font-mono text-[9px] text-red-800">friction<tspan className="text-gray-800">—derived from all the feedback loops</tspan></text>
+                            <text x="25" y="339" className="font-mono text-[9px] text-gray-800">working against or with each other.</text>
+                            <text x="25" y="360" className="font-mono text-[9px] text-gray-800">Calculated as <tspan className="text-red-800">1 - (sum of all individual loop</tspan></text>
+                            <text x="25" y="372" className="font-mono text-[9px] text-red-800">gains) + (sum of gain products of all possible</text>
+                            <text x="25" y="384" className="font-mono text-[9px] text-red-800">pairs of non-touching loops) - ...</text>
+
+                            {/* Delta k Pointer */}
+                            <path d="M 405,240 L 405,320 L 420,320" fill="none" stroke="#666" strokeWidth="1.5" />
+                            <rect x="420" y="280" width="165" height="90" fill="#fdfaf6" stroke="#666" strokeWidth="1" />
+                            <text x="425" y="295" className="font-mono text-[10px] font-bold text-gray-800">The Cofactor</text>
+                            <text x="425" y="315" className="font-mono text-[9px] text-red-800">The friction specific to path k.<tspan className="text-gray-800"> It</tspan></text>
+                            <text x="425" y="327" className="font-mono text-[9px] text-gray-800">is the value of Δ for the part of the</text>
+                            <text x="425" y="339" className="font-mono text-[9px] text-gray-800">graph that does NOT touch the k-th</text>
+                            <text x="425" y="351" className="font-mono text-[9px] text-gray-800">forward path.</text>
+
+                        </svg>
+                    );
+                case "sfg_basic":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 400 200">
+                            {arrowDef}
+                            {/* Line & Arrow */}
+                            <line x1="100" y1="100" x2="290" y2="100" stroke="#1f2937" strokeWidth="2" markerEnd="url(#arrow)" />
+                            {/* Gain Label */}
+                            <text x="200" y="85" textAnchor="middle" className="svg-text">G</text>
+                            {/* Nodes */}
+                            <circle cx="100" cy="100" r="4" className="node-circle" />
+                            <text x="100" y="125" textAnchor="middle" className="svg-label">X₁</text>
+                            <circle cx="300" cy="100" r="4" className="node-circle" />
+                            <text x="300" y="125" textAnchor="middle" className="svg-label">X₂</text>
+                            {/* Equation */}
+                            <text x="200" y="170" textAnchor="middle" className="math-font text-lg text-blue-700 font-semibold">X₂ = G · X₁</text>
+                        </svg>
+                    );
+                case "sfg_rules":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 400 200">
+                            {arrowDef}
+                            {/* Branches */}
+                            <line x1="80" y1="50" x2="192" y2="96" stroke="#1f2937" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <line x1="80" y1="150" x2="192" y2="104" stroke="#1f2937" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <line x1="200" y1="100" x2="310" y2="100" stroke="#1f2937" strokeWidth="2" markerEnd="url(#arrow)" />
+                            {/* Gain Labels */}
+                            <text x="130" y="65" textAnchor="middle" className="svg-text">a</text>
+                            <text x="130" y="145" textAnchor="middle" className="svg-text">b</text>
+                            <text x="260" y="85" textAnchor="middle" className="svg-text">c</text>
+                            {/* Nodes */}
+                            <circle cx="80" cy="50" r="4" className="node-circle" />
+                            <text x="60" y="55" className="svg-label">X₁</text>
+                            <circle cx="80" cy="150" r="4" className="node-circle" />
+                            <text x="60" y="155" className="svg-label">X₃</text>
+                            <circle cx="200" cy="100" r="4" className="node-circle" />
+                            <text x="200" y="125" textAnchor="middle" className="svg-label">X₂</text>
+                            <circle cx="320" cy="100" r="4" className="node-circle" />
+                            <text x="340" y="105" className="svg-label">X₄</text>
+                            {/* Equations */}
+                            <text x="200" y="175" textAnchor="middle" className="math-font text-sm font-semibold text-blue-700">X₂ = aX₁ + bX₃</text>
+                            <text x="200" y="195" textAnchor="middle" className="math-font text-sm font-semibold text-green-700">X₄ = cX₂</text>
+                        </svg>
+                    );
+                case "mason_formula":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 400 250">
+                            {/* Formula Box */}
+                            <rect x="50" y="30" width="300" height="90" rx="10" fill="#f0fdf4" stroke="#22c55e" strokeWidth="2" strokeDasharray="5,5" />
+                            <text x="80" y="85" className="math-font font-bold text-blue-800" fontSize="28">T = </text>
+                            
+                            <text x="210" y="65" textAnchor="middle" className="math-font font-bold text-blue-800" fontSize="22">Σ ( Pₖ · Δₖ )</text>
+                            <line x1="140" y1="80" x2="280" y2="80" stroke="#1e40af" strokeWidth="3" />
+                            <text x="210" y="105" textAnchor="middle" className="math-font font-bold text-blue-800" fontSize="24">Δ</text>
+
+                            {/* Descriptions */}
+                            <text x="50" y="150" className="svg-label text-gray-700" fontSize="14">T = {lang === 'ms' ? 'Fungsi Pindah Keseluruhan' : 'Overall Transfer Function'}</text>
+                            <text x="50" y="175" className="svg-label text-gray-700" fontSize="14">Pₖ = {lang === 'ms' ? 'Gandaan Laluan Hadapan ke-k' : 'k-th Forward Path Gain'}</text>
+                            <text x="50" y="200" className="svg-label text-gray-700" fontSize="14">Δ = {lang === 'ms' ? 'Penentu Sistem (Determinant)' : 'System Determinant'}</text>
+                            <text x="50" y="225" className="svg-label text-gray-700" fontSize="14">Δₖ = {lang === 'ms' ? 'Kofaktor bagi Pₖ' : 'Cofactor for Pₖ'}</text>
+                        </svg>
+                    );
+                case "mason_delta":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 450 300">
+                            {arrowDef}
+                            {/* Delta Formula */}
+                            <text x="225" y="35" textAnchor="middle" className="math-font font-bold text-indigo-800" fontSize="18">
+                                Δ = 1 - (ΣL₁) + (ΣL₂L₃) - (ΣL₄L₅L₆) + ...
+                            </text>
+                            
+                            <line x1="20" y1="55" x2="430" y2="55" stroke="#cbd5e1" strokeDasharray="4,4" />
+
+                            {/* Touching Loops Section */}
+                            <text x="110" y="80" textAnchor="middle" className="svg-label text-red-600">{lang === 'ms' ? 'Gelung Bersentuh' : 'Touching Loops'}</text>
+                            
+                            {/* Diagram for Touching */}
+                            <circle cx="60" cy="150" r="4" className="node-circle" />
+                            <circle cx="110" cy="150" r="4" className="node-circle" fill="#dc2626" />
+                            <circle cx="160" cy="150" r="4" className="node-circle" />
+                            
+                            <line x1="50" y1="150" x2="170" y2="150" stroke="black" />
+                            <line x1="80" y1="150" x2="85" y2="150" stroke="black" markerEnd="url(#arrow)" />
+                            <line x1="130" y1="150" x2="135" y2="150" stroke="black" markerEnd="url(#arrow)" />
+
+                            {/* Loop 1 */}
+                            <path d="M 110,150 Q 85,110 60,150" fill="none" stroke="#2563eb" strokeWidth="2" markerEnd="url(#arrow-blue)" />
+                            {/* Loop 2 */}
+                            <path d="M 160,150 Q 135,110 110,150" fill="none" stroke="#ea580c" strokeWidth="2" markerEnd="url(#arrow-orange)" />
+
+                            <text x="85" y="115" className="svg-text text-blue-600 font-bold">L₁</text>
+                            <text x="135" y="115" className="svg-text text-orange-600 font-bold">L₂</text>
+                            <text x="110" y="180" textAnchor="middle" className="svg-label" fontSize="11">{lang === 'ms' ? 'Berkongsi Nodus Tengah' : 'Shares Common Node'}</text>
+
+                            {/* Separator Line Vertical */}
+                            <line x1="225" y1="65" x2="225" y2="210" stroke="#cbd5e1" strokeDasharray="4,4" />
+
+                            {/* Non-Touching Loops Section */}
+                            <text x="335" y="80" textAnchor="middle" className="svg-label text-green-600">{lang === 'ms' ? 'Tidak Bersentuh' : 'Non-touching Loops'}</text>
+
+                            <circle cx="250" cy="150" r="4" className="node-circle" />
+                            <circle cx="290" cy="150" r="4" className="node-circle" />
+                            <circle cx="380" cy="150" r="4" className="node-circle" />
+                            <circle cx="420" cy="150" r="4" className="node-circle" />
+
+                            <line x1="240" y1="150" x2="430" y2="150" stroke="black" />
+                            <line x1="265" y1="150" x2="270" y2="150" stroke="black" markerEnd="url(#arrow)" />
+                            <line x1="330" y1="150" x2="335" y2="150" stroke="black" markerEnd="url(#arrow)" />
+                            <line x1="395" y1="150" x2="400" y2="150" stroke="black" markerEnd="url(#arrow)" />
+                            
+                            {/* Loop A */}
+                            <path d="M 290,150 Q 270,110 250,150" fill="none" stroke="#2563eb" strokeWidth="2" markerEnd="url(#arrow-blue)" />
+                            {/* Loop B */}
+                            <path d="M 420,150 Q 400,110 380,150" fill="none" stroke="#16a34a" strokeWidth="2" markerEnd="url(#arrow-green)" />
+
+                            <text x="270" y="115" className="svg-text text-blue-600 font-bold">Lₐ</text>
+                            <text x="400" y="115" className="svg-text text-green-600 font-bold">L₆</text>
+                            <text x="335" y="180" textAnchor="middle" className="svg-label" fontSize="11">{lang === 'ms' ? 'TIDAK berkongsi nodus' : 'No common nodes'}</text>
+                            
+                            {/* Explanation box */}
+                            <rect x="30" y="220" width="390" height="60" rx="8" fill="#f8fafc" stroke="#94a3b8" />
+                            <text x="225" y="245" textAnchor="middle" className="svg-label text-gray-800" fontSize="12">
+                                {lang === 'ms' ? 'Jika L₁ & L₂ bersentuh ➔ (L₁L₂) DIABAIKAN dalam formula Δ.' : 'If L₁ & L₂ are touching ➔ (L₁L₂) is IGNORED in Δ formula.'}
+                            </text>
+                            <text x="225" y="265" textAnchor="middle" className="svg-label text-gray-800" fontSize="12">
+                                {lang === 'ms' ? 'Jika Lₐ & L₆ tidak bersentuh ➔ (LₐL₆) DIMASUKKAN dalam formula Δ.' : 'If Lₐ & L₆ are non-touching ➔ (LₐL₆) is INCLUDED in Δ formula.'}
+                            </text>
+                        </svg>
+                    );
+                case "conversion_info":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 400 250">
+                            {arrowDef}
+                            {/* BD Area */}
+                            <text x="200" y="20" textAnchor="middle" className="svg-label text-gray-500">Rajah Blok (Block Diagram)</text>
+                            <circle cx="120" cy="60" r="12" fill="white" stroke="black" strokeWidth="1.5" />
+                            <line x1="110" y1="52" x2="130" y2="68" stroke="black" />
+                            <line x1="130" y1="52" x2="110" y2="68" stroke="black" />
+                            <line x1="50" y1="60" x2="100" y2="60" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="40" y="65" className="svg-text">R</text>
+                            <rect x="160" y="40" width="50" height="40" fill="white" stroke="black" strokeWidth="1.5" />
+                            <text x="185" y="65" textAnchor="middle" className="svg-text">G</text>
+                            <line x1="132" y1="60" x2="152" y2="60" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <line x1="210" y1="60" x2="270" y2="60" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="280" y="65" className="svg-text">Y</text>
+                            
+                            {/* Separation */}
+                            <line x1="50" y1="120" x2="350" y2="120" stroke="#cbd5e1" strokeDasharray="5,5" />
+                            
+                            {/* SFG Area */}
+                            <text x="200" y="140" textAnchor="middle" className="svg-label text-gray-500">Signal Flow Graph</text>
+                            <line x1="60" y1="190" x2="112" y2="190" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="90" y="180" textAnchor="middle" className="svg-text">1</text>
+                            <line x1="120" y1="190" x2="242" y2="190" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="185" y="180" textAnchor="middle" className="svg-text text-blue-600 font-bold">G</text>
+                            <line x1="250" y1="190" x2="302" y2="190" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="280" y="180" textAnchor="middle" className="svg-text">1</text>
+
+                            <circle cx="60" cy="190" r="4" className="node-circle" />
+                            <text x="60" y="215" textAnchor="middle" className="svg-label">R</text>
+                            <circle cx="120" cy="190" r="4" className="node-circle" fill="#3b82f6" />
+                            <text x="120" y="215" textAnchor="middle" className="svg-label text-blue-600">X₁</text>
+                            <circle cx="250" cy="190" r="4" className="node-circle" />
+                            <text x="250" y="215" textAnchor="middle" className="svg-label">X₂</text>
+                            <circle cx="310" cy="190" r="4" className="node-circle" />
+                            <text x="310" y="215" textAnchor="middle" className="svg-label">Y</text>
+                        </svg>
+                    );
+                case "conversion_quiz":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 450 280">
+                            {arrowDef}
+                            {/* BD Area */}
+                            <text x="225" y="20" textAnchor="middle" className="svg-label text-gray-500">Rajah Blok</text>
+                            <line x1="30" y1="60" x2="70" y2="60" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="20" y="65" className="svg-text">R</text>
+                            
+                            <circle cx="85" cy="60" r="12" fill="white" stroke="black" strokeWidth="1.5" />
+                            <text x="75" y="50" className="svg-text" fontSize="10">+</text>
+                            <text x="75" y="85" className="svg-text" fontSize="10">-</text>
+
+                            <line x1="97" y1="60" x2="132" y2="60" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            
+                            <rect x="140" y="40" width="50" height="40" fill="white" stroke="black" strokeWidth="1.5" />
+                            <text x="165" y="65" textAnchor="middle" className="svg-text">G</text>
+
+                            <line x1="190" y1="60" x2="260" y2="60" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            
+                            {/* Pickoff Point in BD */}
+                            <circle cx="220" cy="60" r="3" fill="black" />
+                            <line x1="220" y1="60" x2="220" y2="100" stroke="black" strokeWidth="1.5" />
+                            <line x1="220" y1="100" x2="182" y2="100" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            
+                            <rect x="130" y="80" width="45" height="40" fill="white" stroke="black" strokeWidth="1.5" />
+                            <text x="152" y="105" textAnchor="middle" className="svg-text">H</text>
+
+                            <line x1="130" y1="100" x2="85" y2="100" stroke="black" strokeWidth="1.5" />
+                            <line x1="85" y1="100" x2="85" y2="78" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+
+                            <text x="270" y="65" className="svg-text">Y</text>
+
+                            {/* Separation */}
+                            <line x1="30" y1="140" x2="420" y2="140" stroke="#cbd5e1" strokeDasharray="5,5" />
+                            
+                            {/* SFG Area */}
+                            <text x="225" y="160" textAnchor="middle" className="svg-label text-gray-500">Signal Flow Graph</text>
+                            
+                            <line x1="60" y1="210" x2="102" y2="210" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="85" y="200" textAnchor="middle" className="svg-text">1</text>
+                            
+                            <line x1="110" y1="210" x2="212" y2="210" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="165" y="200" textAnchor="middle" className="svg-text">G</text>
+                            
+                            <line x1="220" y1="210" x2="272" y2="210" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="250" y="200" textAnchor="middle" className="svg-text">1</text>
+
+                            {/* Feedback loop SFG */}
+                            <path d="M 220,210 Q 165,270 115,215" fill="none" stroke="red" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="165" y="255" textAnchor="middle" className="svg-text text-red-600 font-bold">?</text>
+
+                            {/* Nodes SFG */}
+                            <circle cx="60" cy="210" r="4" className="node-circle" />
+                            <text x="60" y="230" textAnchor="middle" className="svg-label">R</text>
+                            
+                            <circle cx="110" cy="210" r="4" className="node-circle" />
+                            <text x="110" y="230" textAnchor="middle" className="svg-label">X₁</text>
+                            
+                            <circle cx="220" cy="210" r="4" className="node-circle" />
+                            <text x="220" y="230" textAnchor="middle" className="svg-label">X₃</text>
+                            
+                            <circle cx="280" cy="210" r="4" className="node-circle" />
+                            <text x="280" y="230" textAnchor="middle" className="svg-label">Y</text>
+                        </svg>
+                    );
+                case "exercise_1":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            {/* Forward Path */}
+                            <line x1="50" y1="125" x2="90" y2="125" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="75" y="115" textAnchor="middle" className="svg-text">1</text>
+
+                            <line x1="100" y1="125" x2="165" y2="125" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="135" y="115" textAnchor="middle" className="svg-text font-bold">G₁</text>
+
+                            <line x1="175" y1="125" x2="240" y2="125" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="210" y="115" textAnchor="middle" className="svg-text font-bold">G₂</text>
+                            
+                            <line x1="250" y1="125" x2="315" y2="125" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="285" y="115" textAnchor="middle" className="svg-text font-bold">G₃</text>
+
+                            <line x1="325" y1="125" x2="390" y2="125" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="360" y="115" textAnchor="middle" className="svg-text">1</text>
+
+                            {/* Loop 1: X2 to X1 */}
+                            <path d="M 175,125 Q 137,60 102,120" fill="none" stroke="#2563eb" strokeWidth="2" markerEnd="url(#arrow-blue)" />
+                            <text x="137" y="70" textAnchor="middle" className="svg-text text-blue-700 font-bold">-H₁</text>
+
+                            {/* Loop 2: X4 to X3 */}
+                            <path d="M 325,125 Q 287,60 252,120" fill="none" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="287" y="70" textAnchor="middle" className="svg-text text-red-700 font-bold">-H₂</text>
+
+                            {/* Nodes */}
+                            <circle cx="50" cy="125" r="4" className="node-circle" />
+                            <text x="35" y="130" className="svg-label">R</text>
+
+                            <circle cx="100" cy="125" r="4" className="node-circle" />
+                            <text x="100" y="150" textAnchor="middle" className="svg-label">X₁</text>
+
+                            <circle cx="175" cy="125" r="4" className="node-circle" />
+                            <text x="175" y="150" textAnchor="middle" className="svg-label">X₂</text>
+                            
+                            <circle cx="250" cy="125" r="4" className="node-circle" />
+                            <text x="250" y="150" textAnchor="middle" className="svg-label">X₃</text>
+
+                            <circle cx="325" cy="125" r="4" className="node-circle" />
+                            <text x="325" y="150" textAnchor="middle" className="svg-label">X₄</text>
+
+                            <circle cx="400" cy="125" r="4" className="node-circle" />
+                            <text x="415" y="130" className="svg-label">Y</text>
+                        </svg>
+                    );
+                case "exercise_multipath":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            
+                            {/* P2 Bypass (G4) */}
+                            <path d="M 100,150 Q 220,30 340,150" fill="none" stroke="#9333ea" strokeWidth="2" strokeDasharray="4,2" markerEnd="url(#arrow)" />
+                            <text x="220" y="60" textAnchor="middle" className="svg-text text-purple-700 font-bold">G₄</text>
+
+                            {/* Main Forward Path P1 */}
+                            <line x1="40" y1="150" x2="90" y2="150" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="65" y="140" textAnchor="middle" className="svg-text">1</text>
+
+                            <line x1="110" y1="150" x2="170" y2="150" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="140" y="140" textAnchor="middle" className="svg-text font-bold">G₁</text>
+
+                            <line x1="190" y1="150" x2="250" y2="150" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="220" y="140" textAnchor="middle" className="svg-text font-bold">G₂</text>
+                            
+                            <line x1="270" y1="150" x2="330" y2="150" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="300" y="140" textAnchor="middle" className="svg-text font-bold">G₃</text>
+
+                            <line x1="350" y1="150" x2="390" y2="150" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="370" y="140" textAnchor="middle" className="svg-text">1</text>
+
+                            {/* Loop 1: X3 to X2 */}
+                            <path d="M 260,150 Q 220,210 180,150" fill="none" stroke="#dc2626" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="220" y="210" textAnchor="middle" className="svg-text text-red-700 font-bold">-H₁</text>
+
+                            {/* Nodes */}
+                            <circle cx="40" cy="150" r="4" className="node-circle" />
+                            <text x="25" y="155" className="svg-label">R</text>
+
+                            <circle cx="100" cy="150" r="4" className="node-circle" />
+                            <text x="100" y="175" textAnchor="middle" className="svg-label">X₁</text>
+
+                            <circle cx="180" cy="150" r="4" className="node-circle" />
+                            <text x="180" y="175" textAnchor="middle" className="svg-label">X₂</text>
+                            
+                            <circle cx="260" cy="150" r="4" className="node-circle" />
+                            <text x="260" y="175" textAnchor="middle" className="svg-label">X₃</text>
+
+                            <circle cx="340" cy="150" r="4" className="node-circle" />
+                            <text x="340" y="175" textAnchor="middle" className="svg-label">X₄</text>
+
+                            <circle cx="400" cy="150" r="4" className="node-circle" />
+                            <text x="415" y="155" className="svg-label">Y</text>
+                        </svg>
+                    );
+                case "assessment_sfg":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 660 300">
+                            <style>
+                                {`
+                                    .sfg-line { stroke: black; stroke-width: 1.5px; fill: none; }
+                                    .sfg-text { font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 18px; fill: black; }
+                                    .sfg-node { fill: black; }
+                                `}
+                            </style>
+                            
+                            {/* Laluan Hadapan (Forward Path Lines) */}
+                            <line x1="50" y1="150" x2="160" y2="150" className="sfg-line" />
+                            <line x1="160" y1="150" x2="270" y2="150" className="sfg-line" />
+                            <line x1="270" y1="150" x2="380" y2="150" className="sfg-line" />
+                            <line x1="380" y1="150" x2="490" y2="150" className="sfg-line" />
+                            <line x1="490" y1="150" x2="600" y2="150" className="sfg-line" />
+
+                            {/* Lengkung Pintasan & Maklum Balas (Bypass & Feedback Arcs) */}
+                            <path d="M 270 150 Q 325 50 380 150" className="sfg-line" />
+                            <path d="M 270 150 Q 215 240 160 150" className="sfg-line" />
+                            <path d="M 490 150 Q 325 350 160 150" className="sfg-line" />
+
+                            {/* Anak Panah Di Tengah Cabang (Mid-path Arrows) */}
+                            {/* R -> N1 */}
+                            <polygon points="100,146 110,150 100,154" fill="black" />
+                            {/* N1 -> N2 */}
+                            <polygon points="210,146 220,150 210,154" fill="black" />
+                            {/* N2 -> N3 */}
+                            <polygon points="320,146 330,150 320,154" fill="black" />
+                            {/* N3 -> N4 */}
+                            <polygon points="430,146 440,150 430,154" fill="black" />
+                            {/* N4 -> C */}
+                            <polygon points="540,146 550,150 540,154" fill="black" />
+                            
+                            {/* G3 Arrow (Kanan) pada titik puncak (325, 100) */}
+                            <polygon points="320,96 330,100 320,104" fill="black" />
+                            
+                            {/* H1 Arrow (Kiri) pada titik bawah (215, 195) */}
+                            <polygon points="220,191 210,195 220,199" fill="black" />
+                            
+                            {/* -H2 Arrow (Kiri) pada titik bawah (325, 250) */}
+                            <polygon points="330,246 320,250 330,254" fill="black" />
+
+                            {/* Nodus (Titik Hitam) */}
+                            <circle cx="50" cy="150" r="4" className="sfg-node" />
+                            <circle cx="160" cy="150" r="4" className="sfg-node" />
+                            <circle cx="270" cy="150" r="4" className="sfg-node" />
+                            <circle cx="380" cy="150" r="4" className="sfg-node" />
+                            <circle cx="490" cy="150" r="4" className="sfg-node" />
+                            <circle cx="600" cy="150" r="4" className="sfg-node" />
+
+                            {/* Label & Teks (Menggunakan format Subscript) */}
+                            <text x="50" y="135" textAnchor="middle" className="sfg-text">R</text>
+                            <text x="105" y="135" textAnchor="middle" className="sfg-text">1</text>
+                            <text x="215" y="135" textAnchor="middle" className="sfg-text">G<tspan baselineShift="sub" fontSize="12">1</tspan>G<tspan baselineShift="sub" fontSize="12">4</tspan></text>
+                            <text x="325" y="135" textAnchor="middle" className="sfg-text">G<tspan baselineShift="sub" fontSize="12">2</tspan></text>
+                            <text x="435" y="135" textAnchor="middle" className="sfg-text">1</text>
+                            <text x="545" y="135" textAnchor="middle" className="sfg-text">1</text>
+                            <text x="600" y="135" textAnchor="middle" className="sfg-text">C</text>
+
+                            {/* Label Cabang Melengkung */}
+                            <text x="325" y="85" textAnchor="middle" className="sfg-text">G<tspan baselineShift="sub" fontSize="12">3</tspan></text>
+                            <text x="215" y="180" textAnchor="middle" className="sfg-text">H<tspan baselineShift="sub" fontSize="12">1</tspan></text>
+                            <text x="325" y="235" textAnchor="middle" className="sfg-text">-H<tspan baselineShift="sub" fontSize="12">2</tspan></text>
+                        </svg>
+                    );
+                default:
+                    return <div>Rajah tidak dijumpai</div>;
+            }
+        };
+
+        const App = () => {
+            const [lang, setLang] = React.useState('ms');
+            const [catIndex, setCatIndex] = React.useState(0);
+            const [contentIndex, setContentIndex] = React.useState(0);
+            const [score, setScore] = React.useState(0);
+            const [selectedAnswer, setSelectedAnswer] = React.useState(null);
+            const [isChecked, setIsChecked] = React.useState(false);
+            const [sidebarOpen, setSidebarOpen] = React.useState(false);
+            const [courseCompleted, setCourseCompleted] = React.useState(false);
+            
+            // Computed properties
+            const currentCatId = categories[catIndex].id;
+            const currentContents = contentData[currentCatId];
+            const currentContent = currentContents[contentIndex];
+            const isLastContent = contentIndex === currentContents.length - 1;
+            const isLastCategory = catIndex === categories.length - 1;
+
+            const toggleLang = () => setLang(l => l === 'ms' ? 'en' : 'ms');
+
+            const handleNext = () => {
+                if (isLastContent) {
+                    if (!isLastCategory) {
+                        setCatIndex(c => c + 1);
+                        setContentIndex(0);
+                        setScore(0);
+                        setSelectedAnswer(null);
+                        setIsChecked(false);
+                        window.scrollTo(0,0);
+                    } else {
+                        setCourseCompleted(true);
+                    }
+                } else {
+                    setContentIndex(c => c + 1);
+                    setSelectedAnswer(null);
+                    setIsChecked(false);
+                    window.scrollTo(0,0);
+                }
+            };
+
+            const selectCategory = (index) => {
+                setCatIndex(index);
+                setContentIndex(0);
+                setScore(0);
+                setSelectedAnswer(null);
+                setIsChecked(false);
+                setSidebarOpen(false);
+                setCourseCompleted(false);
+                window.scrollTo(0,0);
+            };
+
+            const checkAnswer = () => {
+                if (selectedAnswer === null) return;
+                setIsChecked(true);
+                if (selectedAnswer === currentContent.answer) {
+                    setScore(s => s + 1);
+                }
+            };
+
+            const renderContent = () => {
+                if (currentContent.type === "info") {
+                    return (
+                        <div className="space-y-6">
+                            <div className="bg-blue-50 text-blue-800 text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">
+                                {t[lang].infoBadge}
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-800 border-b pb-2">
+                                {currentContent.title[lang]}
+                            </h2>
+                            <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg">
+                                {currentContent.content[lang]}
+                            </div>
+                            
+                            <div className="mt-8 flex justify-end">
+                                <button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition transform hover:scale-105 active:scale-95">
+                                    {isLastContent && isLastCategory ? t[lang].completed : t[lang].understandBtn}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                } else if (currentContent.type === "quiz") {
+                    const isCorrect = isChecked && selectedAnswer === currentContent.answer;
+                    const isWrong = isChecked && selectedAnswer !== currentContent.answer;
+
+                    return (
+                        <div className="space-y-6">
+                            <div className="bg-purple-50 text-purple-800 text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">
+                                {t[lang].quizBadge}
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-800 border-b pb-2">
+                                {currentContent.title[lang]}
+                            </h2>
+                            <div className="text-gray-800 text-lg font-medium">
+                                {currentContent.q[lang]}
+                            </div>
+                            
+                            {/* Menambah render untuk formulaHint jika wujud */}
+                            {currentContent.formulaHint && (
+                                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900 font-serif text-center font-bold text-lg shadow-inner">
+                                    {currentContent.formulaHint[lang]}
+                                </div>
+                            )}
+
+                            <div className="space-y-3 mt-4">
+                                <p className="text-sm text-gray-500 font-semibold">{t[lang].selectAnswer}</p>
+                                {currentContent.options[lang].map((opt, i) => (
+                                    <label key={i} className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
+                                        isChecked ? 
+                                            (i === currentContent.answer ? 'bg-green-50 border-green-500 text-green-900 shadow-sm' : 
+                                            (selectedAnswer === i ? 'bg-red-50 border-red-500 text-red-900' : 'opacity-60 bg-gray-50 border-gray-200'))
+                                        : 
+                                            (selectedAnswer === i ? 'bg-blue-50 border-blue-500 shadow-sm' : 'hover:bg-gray-50 border-gray-200')
+                                    }`}>
+                                        <input 
+                                            type="radio" 
+                                            name="quiz-option" 
+                                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 mr-3"
+                                            checked={selectedAnswer === i}
+                                            onChange={() => !isChecked && setSelectedAnswer(i)}
+                                            disabled={isChecked}
+                                        />
+                                        <span className="text-base">{opt}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            {isChecked && (
+                                <div className={`p-4 rounded-xl mt-4 font-medium flex flex-col gap-3 ${isCorrect ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'}`}>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xl">{isCorrect ? '✨' : '❌'}</span>
+                                        <span className="font-bold">{isCorrect ? t[lang].correct : t[lang].incorrect}</span>
+                                    </div>
+                                    
+                                    {!isCorrect && (
+                                        <div className="text-sm bg-white/60 p-3 rounded-lg border border-red-200 mt-1">
+                                            <strong>{t[lang].correctAnswerWas}</strong> {currentContent.options[lang][currentContent.answer]}
+                                        </div>
+                                    )}
+
+                                    {currentContent.explanation && (
+                                        <div className={`text-sm p-3 rounded-lg mt-1 shadow-inner ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                            <strong>{t[lang].explanation}</strong><br/>
+                                            <span className="text-gray-700 leading-relaxed block mt-1">
+                                                {currentContent.explanation[lang]}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="mt-8 flex justify-end nav-buttons">
+                                {!isChecked ? (
+                                    <button 
+                                        onClick={checkAnswer} 
+                                        disabled={selectedAnswer === null}
+                                        className={`font-semibold py-3 px-6 rounded-xl shadow-md transition ${selectedAnswer !== null ? 'bg-indigo-600 hover:bg-indigo-700 text-white transform hover:scale-105 active:scale-95' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                                    >
+                                        {t[lang].checkAnswer}
+                                    </button>
+                                ) : (
+                                    <button 
+                                        onClick={handleNext} 
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                                    >
+                                        {isLastContent && isLastCategory ? t[lang].completed : t[lang].nextQuestion}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    );
+                } else if (currentContent.type === "assessment") {
+                    return (
+                        <div className="space-y-6">
+                            <div className="bg-amber-50 text-amber-800 text-xs font-bold px-3 py-1 rounded-full inline-block mb-2 no-print">
+                                {t[lang].assessmentBadge}
+                            </div>
+                            
+                            <h2 className="text-3xl font-bold text-gray-800 border-b pb-4">
+                                {currentContent.title[lang]}
+                            </h2>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">{t[lang].studentName}</label>
+                                    <input type="text" className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ali bin Abu..." />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">{t[lang].studentId}</label>
+                                    <input type="text" className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="AI220000..." />
+                                </div>
+                            </div>
+
+                            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap text-lg bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                {currentContent.content[lang]}
+                            </div>
+                            
+                            {/* Empty space for printing */}
+                            <div className="print-space"></div>
+                            <div className="print-space" style={{marginTop: '40px'}}></div>
+                            
+                            <div className="mt-8 flex justify-between items-center no-print">
+                                <button onClick={() => window.print()} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition flex items-center gap-2">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                    {t[lang].printPdf}
+                                </button>
+                                
+                                <button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition transform hover:scale-105 active:scale-95">
+                                    {isLastCategory ? t[lang].completed : t[lang].nextQuestion}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
+                    
+                    {/* Mobile Header / Sidebar Toggle */}
+                    <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center z-20 shadow-md no-print">
+                        <div className="font-bold truncate">{t[lang].title}</div>
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 bg-slate-800 rounded">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
+                    </div>
+
+                    {/* Sidebar */}
+                    <div className={`sidebar ${sidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-72 bg-slate-900 text-white shadow-xl flex flex-col absolute md:relative z-10 min-h-screen md:min-h-0`}>
+                        <div className="p-6">
+                            <h1 className="text-xl font-extrabold tracking-tight mb-1">{t[lang].title}</h1>
+                            <p className="text-slate-400 text-sm">{t[lang].subtitle}</p>
+                        </div>
+                        <div className="flex-1 overflow-y-auto nav-scrollbar px-4 pb-6 space-y-2">
+                            {categories.map((cat, i) => (
+                                <button 
+                                    key={cat.id} 
+                                    onClick={() => selectCategory(i)}
+                                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                                        catIndex === i 
+                                            ? 'bg-blue-600 text-white shadow-md' 
+                                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                    }`}
+                                >
+                                    {cat.title[lang]}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="flex-1 flex flex-col max-h-screen overflow-hidden relative print-full-width">
+                        
+                        {/* Topbar */}
+                        <div className="topbar glass-panel border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10 shadow-sm">
+                            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider hidden sm:block">
+                                {categories[catIndex].title[lang]}
+                            </div>
+                            <div className="flex items-center gap-4 ml-auto">
+                                {/* Hide score during assessment */}
+                                {currentContent.type !== 'assessment' && (
+                                    <div className="bg-white border px-4 py-1.5 rounded-full text-sm font-medium shadow-sm flex items-center gap-2">
+                                        <span className="text-amber-500 text-lg">★</span> 
+                                        <span className="text-gray-600 hidden sm:inline">{t[lang].score}:</span> {score}
+                                    </div>
+                                )}
+                                <button 
+                                    onClick={toggleLang}
+                                    className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm"
+                                >
+                                    {t[lang].langToggle}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Scrolling Content Workspace */}
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row gap-6 bg-slate-50 print-full-width">
+                            
+                            {/* Diagram Panel (Left side on desktop, Top on mobile) */}
+                            <div className={`print-full-width w-full xl:w-5/12 min-h-[300px] xl:min-h-0 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col overflow-hidden ${currentContent.diagram === 'none' ? 'hidden' : 'flex'}`}>
+                                <div className="bg-gray-50 px-4 py-3 border-b text-sm font-bold text-gray-700 flex justify-between">
+                                    <span>Visual</span>
+                                    <span className="text-gray-400 font-normal">{t[lang].questionText} {contentIndex + 1} {t[lang].of} {currentContents.length}</span>
+                                </div>
+                                <div className="flex-1 p-4 flex items-center justify-center relative overflow-hidden bg-grid-slate-100">
+                                    {/* SVG Grid Background Effect */}
+                                    <div className="absolute inset-0 z-0 opacity-20" style={{backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
+                                    <div className="w-full h-full relative z-10 drop-shadow-sm">
+                                        <DiagramViewer diagramType={currentContent.diagram} lang={lang} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Interaction Panel (Right side on desktop, Bottom on mobile) */}
+                            <div className={`w-full ${currentContent.diagram === 'none' ? 'xl:w-full' : 'xl:w-7/12'} bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col print-full-width`}>
+                                <div className="p-6 sm:p-8 flex-1 overflow-y-auto">
+                                    {courseCompleted ? (
+                                        <div className="text-center py-12 space-y-4">
+                                            <div className="text-6xl mb-4">🏆</div>
+                                            <h2 className="text-3xl font-bold text-gray-800">{t[lang].completed}</h2>
+                                            <p className="text-gray-600 text-lg">{t[lang].finishCourse}</p>
+                                            <div className="mt-8">
+                                                <button onClick={() => selectCategory(0)} className="bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-blue-700 transition">
+                                                    Mula Semula / Restart
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        renderContent()
+                                    )}
+                                </div>
+                                
+                                {/* Progress Bar */}
+                                <div className="progress-bar h-2 bg-gray-100 w-full mt-auto rounded-b-2xl overflow-hidden">
+                                    <div 
+                                        className="h-full bg-blue-500 transition-all duration-300" 
+                                        style={{width: `${((contentIndex + 1) / currentContents.length) * 100}%`}}
+                                    ></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

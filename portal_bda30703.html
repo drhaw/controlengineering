@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDA30703 | Control Engineering Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Phosphor Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        /* Subtle grid background for engineering feel */
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+        }
+
+        /* Hover animation for exercise cards */
+        .module-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .module-card:hover .icon-wrapper {
+            background-color: #1e3a8a; /* Blue-900 */
+            color: white;
+            transform: scale(1.1);
+        }
+        .icon-wrapper {
+            transition: all 0.3s ease;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-900 text-white rounded-lg flex items-center justify-center font-bold text-xl shadow-inner">
+                        CE
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-gray-900 leading-tight">BDA30703</h1>
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Control Engineering</p>
+                    </div>
+                </div>
+                <div class="hidden sm:flex items-center space-x-8">
+                    <!-- Nav Links -->
+                    <a href="#rujukan" class="text-gray-500 hover:text-gray-900 font-medium px-1 py-5 transition">
+                        <span class="lang-ms">Rujukan</span>
+                        <span class="lang-en hidden">References</span>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 font-medium px-1 py-5 transition">
+                        <span class="lang-ms">Mengenai</span>
+                        <span class="lang-en hidden">About</span>
+                    </a>
+                    <!-- Language Toggle Button -->
+                    <button onclick="toggleLanguage()" class="ml-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-1.5 px-3 rounded-md border border-slate-300 transition shadow-sm flex items-center gap-2 text-sm">
+                        <i class="ph-bold ph-translate"></i>
+                        <span id="lang-btn">EN</span>
+                    </button>
+                </div>
+                <!-- Mobile Lang Toggle -->
+                <div class="sm:hidden flex items-center">
+                     <button onclick="toggleLanguage()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-1.5 px-3 rounded-md border border-slate-300 transition shadow-sm text-sm">
+                        <span id="lang-btn-mobile">EN</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative bg-blue-900 text-white overflow-hidden">
+        <div class="absolute inset-0 bg-grid opacity-20"></div>
+        <!-- Decorative blob -->
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-blue-800 opacity-50 blur-3xl"></div>
+        
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+            <div class="max-w-3xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-800/50 border border-blue-700 text-blue-200 text-sm font-semibold mb-6 backdrop-blur-sm">
+                    <i class="ph-fill ph-student"></i> 
+                    <span class="lang-ms">Portal Latihan Pengukuhan</span>
+                    <span class="lang-en hidden">Reinforcement Exercise Portal</span>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-6">
+                    <span class="lang-ms">Kuasai Asas <span class="text-blue-400">Kejuruteraan Sistem Kawalan</span></span>
+                    <span class="lang-en hidden">Master the Fundamentals of <span class="text-blue-400">Control Engineering</span></span>
+                </h1>
+                <p class="text-lg md:text-xl text-blue-100 mb-8 leading-relaxed">
+                    <span class="lang-ms">Pilih latihan pengukuhan di bawah untuk menguji pemahaman anda. Visualisasikan konsep kompleks melalui ujian interaktif langkah demi langkah.</span>
+                    <span class="lang-en hidden">Choose the reinforcement exercises below to test your understanding. Visualize complex concepts through step-by-step interactive tests.</span>
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content (Exercises) -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full -mt-12 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+            
+            <!-- Exercise 1: Block Diagram Reduction (bdr.html) -->
+            <a href="bdr.html" class="module-card bg-white rounded-2xl p-8 border border-gray-200 shadow-md group block relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-16 -mt-16 z-0 transition-transform group-hover:scale-110"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="icon-wrapper w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+                            <i class="ph ph-tree-structure"></i>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-500 rounded-full uppercase tracking-widest">
+                            <span class="lang-ms">Latihan 1</span>
+                            <span class="lang-en hidden">Exercise 1</span>
+                        </span>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors">Block Diagram Reduction</h2>
+                    <p class="text-gray-600 leading-relaxed mb-8">
+                        <span class="lang-ms">Uji kefahaman anda dalam meringkaskan rajah blok kompleks kepada fungsi pindah tunggal. Latihan merangkumi hukum pergerakan titik penjumlah dan titik cabang.</span>
+                        <span class="lang-en hidden">Test your understanding in reducing complex block diagrams to a single transfer function. Exercises cover the rules for moving summing junctions and pick-off points.</span>
+                    </p>
+                    
+                    <div class="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
+                        <span class="lang-ms">Mula Latihan</span>
+                        <span class="lang-en hidden">Start Exercise</span>
+                        <i class="ph-bold ph-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Exercise 2: Signal Flow Graph (sfg.html) -->
+            <a href="sfg.html" class="module-card bg-white rounded-2xl p-8 border border-gray-200 shadow-md group block relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-16 -mt-16 z-0 transition-transform group-hover:scale-110"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="icon-wrapper w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm">
+                            <i class="ph ph-graph"></i>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-500 rounded-full uppercase tracking-widest">
+                            <span class="lang-ms">Latihan 2</span>
+                            <span class="lang-en hidden">Exercise 2</span>
+                        </span>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors">Signal Flow Graph (SFG)</h2>
+                    <p class="text-gray-600 leading-relaxed mb-8">
+                        <span class="lang-ms">Latihan penggunaan Formula Mason untuk menyelesaikan fungsi pindah secara terus. Jawab soalan berkaitan laluan hadapan, gelung, dan pengiraan Delta.</span>
+                        <span class="lang-en hidden">Practice using Mason's Formula to solve transfer functions directly. Answer questions related to forward paths, loops, and Delta calculations.</span>
+                    </p>
+                    
+                    <div class="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
+                        <span class="lang-ms">Mula Latihan</span>
+                        <span class="lang-en hidden">Start Exercise</span>
+                        <i class="ph-bold ph-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </main>
+
+    <!-- Rujukan / References Section -->
+    <section id="rujukan" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mb-12 w-full relative z-10">
+        <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div class="mb-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xl">
+                    <i class="ph-fill ph-books"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        <span class="lang-ms">Rujukan & Nota</span>
+                        <span class="lang-en hidden">References & Notes</span>
+                    </h2>
+                    <p class="text-gray-500 text-sm mt-1">
+                        <span class="lang-ms">Muat turun nota rujukan tambahan untuk subjek ini.</span>
+                        <span class="lang-en hidden">Download additional reference notes for this subject.</span>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- PDF 1 -->
+                <a href="block diagram - Hanani.pdf" target="_blank" class="flex items-center p-4 border border-gray-200 rounded-xl hover:bg-slate-50 hover:border-blue-300 transition-all group">
+                    <div class="w-12 h-12 bg-red-50 text-red-500 rounded-lg flex items-center justify-center text-3xl mr-4 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-file-pdf"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">Block Diagram</h3>
+                        <p class="text-sm text-gray-500 font-medium">Nota oleh: Hanani</p>
+                    </div>
+                    <i class="ph-bold ph-download-simple ml-auto text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                </a>
+
+                <!-- PDF 2 -->
+                <a href="signal flow graph Hanani.pdf" target="_blank" class="flex items-center p-4 border border-gray-200 rounded-xl hover:bg-slate-50 hover:border-blue-300 transition-all group">
+                    <div class="w-12 h-12 bg-red-50 text-red-500 rounded-lg flex items-center justify-center text-3xl mr-4 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-file-pdf"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">Signal Flow Graph</h3>
+                        <p class="text-sm text-gray-500 font-medium">Nota oleh: Hanani</p>
+                    </div>
+                    <i class="ph-bold ph-download-simple ml-auto text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-slate-800 rounded flex items-center justify-center font-bold text-white">
+                    CE
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-white">BDA30703 Control Engineering</p>
+                    <p class="text-xs">
+                        <span class="lang-ms">Hak Cipta Terpelihara</span>
+                        <span class="lang-en hidden">All Rights Reserved</span> 
+                        &copy; 2026
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex gap-6 text-sm">
+                <a href="#" class="hover:text-white transition">
+                    <span class="lang-ms">Garis Panduan Latihan</span>
+                    <span class="lang-en hidden">Exercise Guidelines</span>
+                </a>
+                <a href="#" class="hover:text-white transition">
+                    <span class="lang-ms">Bantuan & Sokongan</span>
+                    <span class="lang-en hidden">Help & Support</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script for Language Toggle -->
+    <script>
+        function toggleLanguage() {
+            // Get current language from html tag
+            const htmlTag = document.documentElement;
+            const currentLang = htmlTag.getAttribute('lang') || 'ms';
+            const newLang = currentLang === 'ms' ? 'en' : 'ms';
+            
+            // Set new language
+            htmlTag.setAttribute('lang', newLang);
+            
+            // Toggle visibility of MS elements
+            document.querySelectorAll('.lang-ms').forEach(el => {
+                if(newLang === 'ms') el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            
+            // Toggle visibility of EN elements
+            document.querySelectorAll('.lang-en').forEach(el => {
+                if(newLang === 'en') el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            
+            // Update button text
+            const btnText = newLang === 'ms' ? 'EN' : 'MS';
+            const btn = document.getElementById('lang-btn');
+            const btnMobile = document.getElementById('lang-btn-mobile');
+            if(btn) btn.innerText = btnText;
+            if(btnMobile) btnMobile.innerText = btnText;
+        }
+    </script>
+</body>
+</html>
