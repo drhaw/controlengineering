@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Mathematical Modeling</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overflow-x: hidden; }
+        .svg-text { font-family: 'Times New Roman', Times, serif; font-style: italic; font-size: 16px; }
+        .svg-label { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: bold; }
+        .math-font { font-family: 'Times New Roman', Times, serif; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .nav-scrollbar::-webkit-scrollbar { width: 6px; }
+        .nav-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        
+        /* Elements animation */
+        @keyframes oscillate {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
+        }
+        .anim-mass { animation: oscillate 3s ease-in-out infinite; }
+        
+        /* Print Styles */
+        @media print {
+            body { background-color: white; }
+            .no-print, .md\:hidden, .sidebar, .topbar, .progress-bar, .nav-buttons { display: none !important; }
+            .print-full-width { width: 100% !important; max-width: 100% !important; flex: none !important; }
+            .glass-panel { border: none !important; box-shadow: none !important; }
+            .print-space { display: block !important; height: 350px; border: 2px dashed #94a3b8; margin-top: 20px; border-radius: 12px; position: relative; }
+            .print-space::after { content: "Ruang Jawapan / Answer Space"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #cbd5e1; font-size: 1.5rem; font-weight: bold; font-family: sans-serif;}
+            #root { height: auto !important; overflow: visible !important; }
+            .overflow-y-auto { overflow: visible !important; max-height: none !important; }
+            .min-h-screen { min-height: auto !important; }
+        }
+        .print-space { display: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const t = {
+            ms: {
+                title: "Tutor Mathematical Modeling",
+                subtitle: "Kejuruteraan Sistem Kawalan",
+                questionText: "Halaman",
+                of: "daripada",
+                score: "Skor Kategori",
+                selectAnswer: "Pilih Jawapan:",
+                correct: "Tahniah! Jawapan Betul.",
+                incorrect: "Maaf, jawapan kurang tepat.",
+                checkAnswer: "Semak Jawapan",
+                nextQuestion: "Seterusnya ➔",
+                understandBtn: "Saya Faham, Teruskan ➔",
+                completed: "Kategori Selesai! ✓",
+                noDiagram: "Tiada gambar rajah",
+                langToggle: "EN",
+                infoBadge: "NOTA PEMBELAJARAN",
+                quizBadge: "LATIHAN PENGUKUHAN",
+                startCategory: "Mula Belajar",
+                finishCourse: "Tahniah! Anda telah melengkapkan semua modul pemodelan.",
+                correctAnswerWas: "Jawapan yang betul ialah:",
+                explanation: "Penerangan:",
+                printPdf: "Cetak sebagai PDF",
+                studentName: "Nama Pelajar:",
+                studentId: "No. Matrik:",
+                assessmentBadge: "TUGASAN AKHIR"
+            },
+            en: {
+                title: "Mathematical Modeling Tutor",
+                subtitle: "Control Systems Engineering",
+                questionText: "Page",
+                of: "of",
+                score: "Category Score",
+                selectAnswer: "Select Answer:",
+                correct: "Congratulations! Correct Answer.",
+                incorrect: "Sorry, incorrect answer.",
+                checkAnswer: "Check Answer",
+                nextQuestion: "Next ➔",
+                understandBtn: "I Understand, Continue ➔",
+                completed: "Category Completed! ✓",
+                noDiagram: "No diagram",
+                langToggle: "MS",
+                infoBadge: "LEARNING NOTE",
+                quizBadge: "EXERCISE",
+                startCategory: "Start Learning",
+                finishCourse: "Congratulations! You have completed all modeling modules.",
+                correctAnswerWas: "The correct answer was:",
+                explanation: "Explanation:",
+                printPdf: "Print to PDF",
+                studentName: "Student Name:",
+                studentId: "Student ID:",
+                assessmentBadge: "FINAL ASSESSMENT"
+            }
+        };
+
+        const categories = [
+            { id: 'intro', title: { ms: '1. Asas Pemodelan', en: '1. Basics of Modeling' } },
+            { id: 'mech_trans', title: { ms: '2. Mekanikal (Translasi)', en: '2. Mechanical (Translational)' } },
+            { id: 'mech_rot', title: { ms: '3. Mekanikal (Putaran)', en: '3. Mechanical (Rotational)' } },
+            { id: 'electrical', title: { ms: '4. Elektrikal', en: '4. Electrical' } },
+            { id: 'liquid_level', title: { ms: '5. Aras Cecair', en: '5. Liquid Level' } },
+            { id: 'fluid_power', title: { ms: '6. Kuasa Bendalir', en: '6. Fluid Power' } },
+            { id: 'thermal', title: { ms: '7. Sistem Terma', en: '7. Thermal Systems' } },
+            { id: 'electromech', title: { ms: '8. Elektromekanikal', en: '8. Electromechanical' } },
+            { id: 'analogy', title: { ms: '9. Sistem Beranalog', en: '9. Analogous Systems' } },
+            { id: 'assessment', title: { ms: '10. Penilaian Akhir', en: '10. Final Assessment' } }
+        ];
+
+        const contentData = {
+            intro: [
+                {
+                    type: "info",
+                    title: { ms: "Apa itu Pemodelan Matematik?", en: "What is Mathematical Modeling?" },
+                    content: { 
+                        ms: "Pemodelan matematik ialah proses menterjemah sistem fizikal (seperti kereta, litar elektrik, robot) kepada persamaan matematik.\n\nDalam Kejuruteraan Kawalan, kita menggunakan pemodelan ini untuk mencari **Fungsi Pindah** (Transfer Function, G(s)).\n\nFungsi Pindah = Output(s) / Input(s) (dengan mengandaikan keadaan awal adalah sifar).", 
+                        en: "Mathematical modeling is the process of translating a physical system (like a car, electrical circuit, robot) into mathematical equations.\n\nIn Control Engineering, we use this modeling to find the **Transfer Function** (G(s)).\n\nTransfer Function = Output(s) / Input(s) (assuming initial conditions are zero)." 
+                    },
+                    diagram: "intro_model"
+                },
+                {
+                    type: "info",
+                    title: { ms: "Transformasi Laplace", en: "Laplace Transformation" },
+                    content: { 
+                        ms: "Untuk mendapatkan Fungsi Pindah, kita menukar persamaan pembezaan dalam domain masa (t) kepada domain frekuensi (s) menggunakan Transformasi Laplace.\n\nPeraturan asas:\n• x(t) ➔ X(s)\n• dx/dt (Halaju) ➔ s X(s)\n• d²x/dt² (Pecutan) ➔ s² X(s)", 
+                        en: "To obtain the Transfer Function, we convert differential equations in the time domain (t) to the frequency domain (s) using the Laplace Transform.\n\nBasic rules:\n• x(t) ➔ X(s)\n• dx/dt (Velocity) ➔ s X(s)\n• d²x/dt² (Acceleration) ➔ s² X(s)" 
+                    },
+                    diagram: "laplace_rules"
+                }
+            ],
+            mech_trans: [
+                {
+                    type: "info",
+                    title: { ms: "Komponen Sistem Translasi", en: "Translational System Components" },
+                    content: { 
+                        ms: "Sistem mekanikal translasi (pergerakan lurus) mempunyai 3 komponen asas yang menentang pergerakan:\n\n1. **Jisim (Mass, M)**: Menentang pecutan. (Daya = M · d²x/dt²)\n2. **Peredam (Damper/Viscous Friction, fv)**: Menentang halaju. (Daya = fv · dx/dt)\n3. **Spring (K)**: Menentang sesaran/jarak. (Daya = K · x)", 
+                        en: "Translational mechanical systems (linear motion) have 3 basic components that oppose motion:\n\n1. **Mass (M)**: Opposes acceleration. (Force = M · d²x/dt²)\n2. **Damper (Viscous Friction, fv)**: Opposes velocity. (Force = fv · dx/dt)\n3. **Spring (K)**: Opposes displacement. (Force = K · x)" 
+                    },
+                    diagram: "mech_components"
+                },
+                {
+                    type: "info",
+                    title: { ms: "Gambar Rajah Jasad Bebas (FBD)", en: "Free Body Diagram (FBD)" },
+                    content: { 
+                        ms: "Hukum Newton Kedua: ΣF = M · a\nJumlah Daya = Jisim × Pecutan.\n\nUntuk melukis FBD:\n1. Tentukan arah pergerakan positif (contoh: x(t) ke kanan).\n2. Daya yang dikenakan, F(t) berada pada arah positif.\n3. Daya rintangan (Spring, Damper, Inersia Jisim) **MESTI melawan** arah pergerakan (ke kiri).", 
+                        en: "Newton's Second Law: ΣF = M · a\nSum of Forces = Mass × Acceleration.\n\nTo draw an FBD:\n1. Determine the positive direction of motion (e.g., x(t) to the right).\n2. Applied force, F(t) is in the positive direction.\n3. Resisting forces (Spring, Damper, Mass Inertia) **MUST oppose** the direction of motion (to the left)." 
+                    },
+                    diagram: "mech_fbd"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Impedans Laplace", en: "Question 1: Laplace Impedance" },
+                    q: { ms: "Di dalam domain Laplace (s), apakah galangan (impedance) yang diwakili oleh komponen Peredam (Damper, fv)?", en: "In the Laplace domain (s), what impedance is represented by the Damper (fv) component?" },
+                    options: {
+                        ms: ["fv / s", "fv", "fv · s", "fv · s²"],
+                        en: ["fv / s", "fv", "fv · s", "fv · s²"]
+                    },
+                    answer: 2,
+                    explanation: {
+                        ms: "Peredam menentang halaju (dx/dt). Dalam transformasi Laplace, pembezaan tahap pertama (dx/dt) menjadi 's'. Oleh itu, daya peredam dalam Laplace ialah fv·s X(s), dan galangannya ialah fv·s.",
+                        en: "A damper opposes velocity (dx/dt). In Laplace transform, a first derivative (dx/dt) becomes 's'. Therefore, the damper force in Laplace is fv·s X(s), and its impedance is fv·s."
+                    },
+                    diagram: "mech_components"
+                }
+            ],
+            mech_rot: [
+                {
+                    type: "info",
+                    title: { ms: "Sistem Mekanikal Putaran", en: "Rotational Mechanical Systems" },
+                    content: { 
+                        ms: "Sistem putaran sangat serupa dengan sistem translasi. Elemennya adalah:\n\n1. **Inersia (J)**: Menggantikan Jisim (M). Menentang pecutan sudut (α atau d²θ/dt²).\n2. **Peredam Putaran (D / b)**: Menggantikan fv. Menentang halaju sudut (ω atau dθ/dt).\n3. **Spring Kilasan (K)**: Sama seperti translasi, menentang sudut (θ).\n\nDaya (F) digantikan dengan **Daya Kilas / Tork (Torque, T)**.", 
+                        en: "Rotational systems are very similar to translational systems. The elements are:\n\n1. **Inertia (J)**: Replaces Mass (M). Opposes angular acceleration (α or d²θ/dt²).\n2. **Rotational Damper (D / b)**: Replaces fv. Opposes angular velocity (ω or dθ/dt).\n3. **Torsional Spring (K)**: Same as translational, opposes angle (θ).\n\nForce (F) is replaced by **Torque (T)**." 
+                    },
+                    diagram: "mech_rot_sys"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Persamaan Tork", en: "Question 1: Torque Equation" },
+                    q: { ms: "Untuk sebuah cakera berputar (Inersia J) dengan spring (K) dan peredam (D), apakah persamaan dalam domain Laplace jika Tork T(s) dikenakan?", en: "For a rotating disk (Inertia J) with a spring (K) and damper (D), what is the equation in the Laplace domain if Torque T(s) is applied?" },
+                    options: {
+                        ms: [
+                            "T(s) = (J·s + D + K/s) Θ(s)", 
+                            "T(s) = (J·s² + D·s + K) Θ(s)", 
+                            "T(s) = (J + D·s + K·s²) Θ(s)",
+                            "T(s) = (M·s² + fv·s + K) Θ(s)"
+                        ],
+                        en: [
+                            "T(s) = (J·s + D + K/s) Θ(s)", 
+                            "T(s) = (J·s² + D·s + K) Θ(s)", 
+                            "T(s) = (J + D·s + K·s²) Θ(s)",
+                            "T(s) = (M·s² + fv·s + K) Θ(s)"
+                        ]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Galangan Laplace untuk putaran adalah tepat sama dengan translasi. J mendapat s², D mendapat s, dan K berdiri sendiri. Semuanya didarabkan dengan sesaran sudut Θ(s).",
+                        en: "Laplace impedance for rotation is exactly the same as translation. J gets s², D gets s, and K stands alone. All are multiplied by the angular displacement Θ(s)."
+                    },
+                    diagram: "mech_rot_sys"
+                }
+            ],
+            electrical: [
+                {
+                    type: "info",
+                    title: { ms: "Komponen Sistem Elektrikal", en: "Electrical System Components" },
+                    content: { 
+                        ms: "Dalam pemodelan elektrik, kita mencari Fungsi Pindah antara Voltan (V) dan Arus (I). Galangan (Impedance, Z) dalam domain Laplace:\n\n1. **Perintang (Resistor, R)**: Z = R (Tiada perubahan)\n2. **Induktor (Inductor, L)**: Z = L·s\n3. **Kapasitor (Capacitor, C)**: Z = 1 / (C·s)\n\nKita menggunakan Hukum Voltan Kirchhoff (KVL): Jumlah susut voltan dalam gelung tertutup = Voltan Bekalan.", 
+                        en: "In electrical modeling, we find the Transfer Function between Voltage (V) and Current (I). Impedance (Z) in the Laplace domain:\n\n1. **Resistor (R)**: Z = R (No change)\n2. **Inductor (L)**: Z = L·s\n3. **Capacitor (C)**: Z = 1 / (C·s)\n\nWe use Kirchhoff's Voltage Law (KVL): Sum of voltage drops in a closed loop = Supply Voltage." 
+                    },
+                    diagram: "elec_components"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Litar RLC Bersiri", en: "Question 1: Series RLC Circuit" },
+                    q: { ms: "Berdasarkan rajah Litar RLC, apakah persamaan Hukum Voltan Kirchhoff (KVL) yang betul dalam domain Laplace? Anggap V(s) adalah input dan I(s) mengalir dalam litar.", en: "Based on the RLC Circuit diagram, what is the correct Kirchhoff's Voltage Law (KVL) equation in the Laplace domain? Assume V(s) is input and I(s) flows in the circuit." },
+                    options: {
+                        ms: [
+                            "V(s) = [R + L·s + C·s] I(s)", 
+                            "V(s) = [R + L/s + C/s] I(s)", 
+                            "V(s) = [R + L·s + 1/(C·s)] I(s)",
+                            "V(s) = [R·s + L·s² + C] I(s)"
+                        ],
+                        en: [
+                            "V(s) = [R + L·s + C·s] I(s)", 
+                            "V(s) = [R + L/s + C/s] I(s)", 
+                            "V(s) = [R + L·s + 1/(C·s)] I(s)",
+                            "V(s) = [R·s + L·s² + C] I(s)"
+                        ]
+                    },
+                    answer: 2,
+                    explanation: {
+                        ms: "KVL menyatakan V(s) = Vr + Vl + Vc. Menggunakan Hukum Ohm V=IZ, galangan bagi Resistor ialah R, Induktor ialah L·s, dan Kapasitor ialah 1/(C·s). Tambahkan kesemuanya dan darab dengan I(s).",
+                        en: "KVL states V(s) = Vr + Vl + Vc. Using Ohm's Law V=IZ, impedance for Resistor is R, Inductor is L·s, and Capacitor is 1/(C·s). Add them all up and multiply by I(s)."
+                    },
+                    diagram: "elec_rlc"
+                }
+            ],
+            liquid_level: [
+                {
+                    type: "info",
+                    title: { ms: "Komponen Sistem Aras Cecair", en: "Liquid Level System Components" },
+                    content: { 
+                        ms: "Sistem cecair memodelkan perubahan aras cecair dalam tangki. Dua elemen utama:\n\n1. **Kapasitans Cecair (C)**: Menyimpan jisim cecair. Ia bergantung kepada luas keratan rentas tangki (A).\n2. **Rintangan Cecair (R)**: Penentangan terhadap aliran cecair, lazimnya berpunca daripada injap (valve) atau paip kecil.\n\nPersamaan Kadar Aliran: Kuantiti masuk tolak kuantiti keluar sama dengan perubahan isipadu. Q_in - Q_out = C(dh/dt).", 
+                        en: "Liquid systems model the change of liquid level in tanks. Two main elements:\n\n1. **Liquid Capacitance (C)**: Stores liquid mass. It depends on the tank's cross-sectional area (A).\n2. **Liquid Resistance (R)**: Opposition to liquid flow, usually from a valve or small pipe.\n\nFlow Rate Equation: Quantity in minus quantity out equals change in volume. Q_in - Q_out = C(dh/dt)." 
+                    },
+                    diagram: "liquid_level_sys"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Persamaan Pembezaan Cecair", en: "Question 1: Liquid Differential Equation" },
+                    q: { ms: "Jika aliran keluar Q_out = h/R, dan Q_in - Q_out = C(dh/dt), apakah pemalar masa (time constant) bagi sistem tangki ini?", en: "If outflow Q_out = h/R, and Q_in - Q_out = C(dh/dt), what is the time constant for this tank system?" },
+                    options: {
+                        ms: ["R / C", "R * C", "1 / (RC)", "C / R"],
+                        en: ["R / C", "R * C", "1 / (RC)", "C / R"]
+                    },
+                    answer: 1,
+                    explanation: {
+                        ms: "Dengan menggantikan Q_out, kita dapat C(dh/dt) + h/R = Q_in. Darabkan semua dengan R untuk susunan piawai: RC(dh/dt) + h = R Q_in. Pemali bagi pembezaan tahap pertama (dh/dt) ialah RC, yang merupakan pemalar masa.",
+                        en: "Substituting Q_out, we get C(dh/dt) + h/R = Q_in. Multiply all by R for standard form: RC(dh/dt) + h = R Q_in. The coefficient of the first derivative (dh/dt) is RC, which is the time constant."
+                    },
+                    diagram: "liquid_level_sys"
+                }
+            ],
+            fluid_power: [
+                {
+                    type: "info",
+                    title: { ms: "Sistem Kuasa Bendalir (Hidraulik)", en: "Fluid Power Systems (Hydraulic)" },
+                    content: { 
+                        ms: "Sistem hidraulik menggunakan bendalir termampat (incompressible fluid) di bawah tekanan untuk menjana, mengawal, dan memindahkan kuasa secara mekanikal.\n\nElemen utama ialah Silinder/Omboh (Piston).\n• Beza Tekanan, ΔP = P_1 - P_2\n• Luas Keratan Rentas Omboh = A\n• Daya yang Dihasilkan, F = A · ΔP\n\nSistem ini sangat berguna kerana ia mampu menghasilkan daya linear (translasi) yang sangat besar berbanding sistem elektrik biasa.", 
+                        en: "Hydraulic systems use incompressible fluids under pressure to generate, control, and transmit mechanical power.\n\nThe main element is the Cylinder/Piston.\n• Pressure Difference, ΔP = P_1 - P_2\n• Piston Cross-Sectional Area = A\n• Force Generated, F = A · ΔP\n\nThese systems are highly useful because they can generate very large linear (translational) forces compared to standard electrical systems." 
+                    },
+                    diagram: "fluid_power_sys"
+                },
+                {
+                    type: "quiz",
+                    title: { ms: "Soalan 1: Daya Hidraulik", en: "Question 1: Hydraulic Force" },
+                    q: { ms: "Sebuah omboh hidraulik mempunyai luas A = 0.5 m². Tekanan masuk ialah P_1 = 100 Pa dan tekanan buangan P_2 = 20 Pa. Berapakah daya mekanikal (F) yang terhasil?", en: "A hydraulic piston has an area A = 0.5 m². Inlet pressure is P_1 = 100 Pa and exhaust pressure P_2 = 20 Pa. What is the mechanical force (F) generated?" },
+                    options: {
+                        ms: ["40 N", "50 N", "60 N", "100 N"],
+                        en: ["40 N", "50 N", "60 N", "100 N"]
+                    },
+                    answer: 0,
+                    explanation: {
+                        ms: "Daya hidraulik: F = A(P_1 - P_2). F = 0.5 × (100 - 20) = 0.5 × 80 = 40 Newton.",
+                        en: "Hydraulic force: F = A(P_1 - P_2). F = 0.5 × (100 - 20) = 0.5 × 80 = 40 Newtons."
+                    },
+                    diagram: "fluid_power_sys"
+                }
+            ],
+            thermal: [
+                {
+                    type: "info",
+                    title: { ms: "Komponen Sistem Terma", en: "Thermal System Components" },
+                    content: { 
+                        ms: "Sistem terma memodelkan perubahan haba dan suhu. Dua komponen penting:\n\n1. **Rintangan Terma (R)**: Rintangan terhadap aliran haba (contoh: penebat haba/insulator). Haba mengalir berdasarkan beza suhu: q = (T_1 - T_2) / R.\n2. **Kapasitans Terma (C)**: Keupayaan sistem untuk menyimpan haba. C = m · c (jisim darab muatan haba tentu).\n\nPersamaan Keseimbangan: q_in - q_out = C(dT/dt).", 
+                        en: "Thermal systems model the changes in heat and temperature. Two essential components:\n\n1. **Thermal Resistance (R)**: Resistance to heat flow (e.g., thermal insulator). Heat flows based on temp difference: q = (T_1 - T_2) / R.\n2. **Thermal Capacitance (C)**: The system's ability to store heat. C = m · c (mass times specific heat).\n\nBalance Equation: q_in - q_out = C(dT/dt)." 
+                    },
+                    diagram: "thermal_sys"
+                }
+            ],
+            electromech: [
+                {
+                    type: "info",
+                    title: { ms: "Sistem Elektromekanikal (Motor DC)", en: "Electromechanical Systems (DC Motor)" },
+                    content: {
+                        ms: "Sistem elektromekanikal menukar tenaga elektrik kepada tenaga mekanikal. Contoh utama ialah Motor Arus Terus (DC Motor).\n\nSistem ini terbahagi kepada dua bahagian:\n1. **Bahagian Elektrik (Armature)**: Litar dengan rintangan (R_a) dan kearuhan (L_a).\n2. **Bahagian Mekanikal (Rotor)**: Aci (shaft) berputar dengan inersia (J) dan geseran/peredam (D).",
+                        en: "Electromechanical systems convert electrical energy into mechanical energy. The prime example is the DC Motor.\n\nThis system is divided into two parts:\n1. **Electrical Part (Armature)**: Circuit with resistance (R_a) and inductance (L_a).\n2. **Mechanical Part (Rotor)**: Rotating shaft with inertia (J) and friction/damper (D)."
+                    },
+                    diagram: "electromech_sys"
+                },
+                {
+                    type: "info",
+                    title: { ms: "Gandingan Elektrik & Mekanikal", en: "Electrical & Mechanical Coupling" },
+                    content: {
+                        ms: "Dua bahagian ini dihubungkan melalui dua pemalar motor (Motor Constants):\n\n• **Daya Kilas (Torque, T_m)**: Dihasilkan oleh arus. T_m = K_t · I_a\n• **Daya Gerak Elektrik Balik (Back EMF, E_b)**: Terhasil akibat putaran motor. Ia menentang voltan masuk. E_b = K_b · ω\n\n(Nota: K_t ialah Pemalar Tork, K_b ialah Pemalar Daya Gerak Elektrik Balik).",
+                        en: "These two parts are coupled through two Motor Constants:\n\n• **Motor Torque (T_m)**: Generated by armature current. T_m = K_t · I_a\n• **Back EMF (E_b)**: Generated by motor rotation. It opposes the input voltage. E_b = K_b · ω\n\n(Note: K_t is Torque Constant, K_b is Back EMF Constant)."
+                    },
+                    diagram: "electromech_sys"
+                }
+            ],
+            analogy: [
+                {
+                    type: "info",
+                    title: { ms: "Sistem Beranalog (Force-Voltage Analogy)", en: "Analogous Systems (Force-Voltage)" },
+                    content: { 
+                        ms: "Persamaan mekanikal dan elektrikal mempunyai corak matematik yang SERUPA! Ini dipanggil sistem beranalog.\n\nDalam Analogi Daya-Voltan (Force-Voltage):\n• Daya (F) ≈ Voltan (V)\n• Jisim (M) ≈ Induktor (L)\n• Peredam (fv) ≈ Perintang (R)\n• Spring (K) ≈ 1/Kapasitor (1/C)\n• Halaju (dx/dt) ≈ Arus (I)", 
+                        en: "Mechanical and electrical equations have EXACTLY the same mathematical pattern! This is called analogous systems.\n\nIn Force-Voltage Analogy:\n• Force (F) ≈ Voltage (V)\n• Mass (M) ≈ Inductor (L)\n• Damper (fv) ≈ Resistor (R)\n• Spring (K) ≈ 1/Capacitor (1/C)\n• Velocity (dx/dt) ≈ Current (I)" 
+                    },
+                    diagram: "analogy_table"
+                }
+            ],
+            assessment: [
+                {
+                    type: "assessment",
+                    title: { ms: "Tugasan 1: Sistem Translasi", en: "Assignment 1: Translational System" },
+                    content: { 
+                        ms: "Sila isikan nama dan cetak halaman ini sebagai PDF (Print to PDF).\n\n**Arahan Soalan:**\nRajah menunjukkan sistem mekanikal translasi dengan DUA jisim (M_1 dan M_2). Geseran permukaan (Peredam) wujud di antara jisim dan lantai (fv_1, fv_2). Daya F(t) dikenakan pada M_2.\n\n1. Lukiskan **Gambar Rajah Jasad Bebas (FBD)** berasingan untuk Jisim M_1 dan Jisim M_2.\n2. Tuliskan **Persamaan Gerakan** dalam domain Laplace (s) bagi Nodus M_1.\n3. Tuliskan **Persamaan Gerakan** dalam domain Laplace (s) bagi Nodus M_2.\n4. Gunakan Kaedah Penggantian atau Petua Cramer untuk mencari **Fungsi Pindah G(s) = X_2(s) / F(s)**.", 
+                        en: "Please fill in your name and print this page as PDF.\n\n**Question Instructions:**\nThe diagram shows a translational mechanical system with TWO masses (M_1 and M_2). Surface friction (Damper) exists between the masses and the floor (fv_1, fv_2). Force F(t) is applied to M_2.\n\n1. Draw separate **Free Body Diagrams (FBD)** for Mass M_1 and Mass M_2.\n2. Write the **Equation of Motion** in the Laplace domain (s) for Node M_1.\n3. Write the **Equation of Motion** in the Laplace domain (s) for Node M_2.\n4. Use Substitution Method or Cramer's Rule to find the **Transfer Function G(s) = X_2(s) / F(s)**." 
+                    },
+                    diagram: "assessment_model"
+                },
+                {
+                    type: "assessment",
+                    title: { ms: "Tugasan 2: Sistem Mekanikal Putaran (Rotational)", en: "Assignment 2: Rotational Mechanical System" },
+                    content: { 
+                        ms: "(Sila cetak halaman ini juga dan lampirkan bersama tugasan pertama anda).\n\n**Arahan Soalan:**\nRajah menunjukkan sebuah sistem mekanikal putaran. Sistem ini terdiri daripada inersia roda tenaga (Flywheel mass inertia, J_1), disambungkan ke casis enjin (Engine chassis) dan pembeza terkunci (Locked differential) melalui beberapa spring (k_1, k_2, k_3) dan peredam (b_1, b_2). Daya tork T(t) dikenakan pada J_1. Terdapat nod simpang perantaraan (intermediate junction node) pada θ_2 yang tidak mempunyai inersia.\n\n1. Lukiskan **Gambar Rajah Jasad Bebas (FBD)** secara berasingan untuk Roda Tenaga J_1 dan Nod θ_2.\n2. Tuliskan **Persamaan Gerakan** dalam domain Laplace (s) bagi Roda Tenaga J_1.\n3. Tuliskan **Persamaan Gerakan** dalam domain Laplace (s) bagi Nod θ_2.\n4. Menggunakan kaedah penggantian atau Petua Cramer, dapatkan **Fungsi Pindah G(s) = Θ_2(s) / T(s)**.", 
+                        en: "(Please print this page as well and attach it to your first assignment).\n\n**Question Instructions:**\nThe diagram shows a rotational mechanical system. The system consists of a flywheel mass inertia (J_1), connected to an engine chassis and a locked differential through several springs (k_1, k_2, k_3) and dampers (b_1, b_2). A torque T(t) is applied to J_1. There is a massless intermediate junction node at θ_2.\n\n1. Draw separate **Free Body Diagrams (FBD)** for the Flywheel J_1 and Node θ_2.\n2. Write the **Equation of Motion** in the Laplace domain (s) for Flywheel J_1.\n3. Write the **Equation of Motion** in the Laplace domain (s) for Node θ_2.\n4. Use Cramer's Rule or substitution to find the **Transfer Function G(s) = Θ_2(s) / T(s)**." 
+                    },
+                    diagram: "assessment_mech_rot"
+                }
+            ]
+        };
+
+        const DiagramViewer = ({ diagramType, lang }) => {
+            if (diagramType === "none") {
+                return <div className="flex items-center justify-center h-full text-gray-400 italic">{t[lang].noDiagram}</div>;
+            }
+
+            const arrowDef = (
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2937" /></marker>
+                    <marker id="arrow-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626" /></marker>
+                    <marker id="arrow-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb" /></marker>
+                    <marker id="arrow-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#16a34a" /></marker>
+                    <pattern id="hatch" width="10" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="0" y2="10" stroke="#94a3b8" strokeWidth="2" /></pattern>
+                </defs>
+            );
+
+            switch (diagramType) {
+                case "intro_model":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 300">
+                            {arrowDef}
+                            <rect x="50" y="80" width="100" height="80" rx="8" fill="#e2e8f0" stroke="#64748b" strokeWidth="2" />
+                            <circle cx="75" cy="160" r="15" fill="#334155" />
+                            <circle cx="125" cy="160" r="15" fill="#334155" />
+                            <text x="100" y="125" textAnchor="middle" className="svg-label text-slate-700">Physical</text>
+                            <text x="100" y="145" textAnchor="middle" className="svg-label text-slate-700">System</text>
+                            <path d="M 160 120 Q 200 80 240 120" fill="none" stroke="#3b82f6" strokeWidth="3" markerEnd="url(#arrow-blue)" />
+                            <text x="200" y="90" textAnchor="middle" className="svg-label text-blue-600 text-xs">Modeling</text>
+                            <rect x="250" y="60" width="220" height="120" rx="8" fill="#f0fdf4" stroke="#22c55e" strokeWidth="2" />
+                            <text x="360" y="85" textAnchor="middle" className="svg-label text-green-800">Transfer Function</text>
+                            <text x="360" y="115" textAnchor="middle" className="math-font font-bold text-xl text-green-900">G(s) = Y(s) / U(s)</text>
+                            <text x="360" y="150" textAnchor="middle" className="math-font text-sm text-green-700">M·s² X(s) + fv·s X(s) ...</text>
+                        </svg>
+                    );
+                case "laplace_rules":
+                    return (
+                         <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <rect x="50" y="40" width="400" height="170" rx="12" fill="#fff" stroke="#e2e8f0" strokeWidth="2" />
+                            <text x="250" y="70" textAnchor="middle" className="svg-label text-lg">Time Domain (t) ➔ Laplace Domain (s)</text>
+                            <line x1="70" y1="85" x2="430" y2="85" stroke="#cbd5e1" />
+                            <text x="150" y="120" textAnchor="middle" className="math-font text-xl">x(t)</text>
+                            <line x1="210" y1="115" x2="290" y2="115" stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrow-blue)" />
+                            <text x="350" y="120" textAnchor="middle" className="math-font text-xl text-blue-700 font-bold">X(s)</text>
+                            <text x="150" y="160" textAnchor="middle" className="math-font text-xl">dx / dt</text>
+                            <line x1="210" y1="155" x2="290" y2="155" stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrow-blue)" />
+                            <text x="350" y="160" textAnchor="middle" className="math-font text-xl text-blue-700 font-bold">s X(s)</text>
+                            <text x="150" y="200" textAnchor="middle" className="math-font text-xl">d²x / dt²</text>
+                            <line x1="210" y1="195" x2="290" y2="195" stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrow-blue)" />
+                            <text x="350" y="200" textAnchor="middle" className="math-font text-xl text-blue-700 font-bold">s² X(s)</text>
+                         </svg>
+                    );
+                case "mech_components":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <rect x="40" y="60" width="20" height="130" fill="url(#hatch)" stroke="black" />
+                            <line x1="60" y1="60" x2="60" y2="190" stroke="black" strokeWidth="2" />
+                            <line x1="40" y1="190" x2="400" y2="190" stroke="black" strokeWidth="2" />
+                            <path d="M 60 90 L 80 90 L 85 80 L 95 100 L 105 80 L 115 100 L 125 80 L 135 100 L 145 80 L 150 90 L 180 90" fill="none" stroke="#16a34a" strokeWidth="2" />
+                            <text x="115" y="70" textAnchor="middle" className="math-font font-bold text-green-700">K</text>
+                            <line x1="60" y1="150" x2="110" y2="150" stroke="#ea580c" strokeWidth="2" />
+                            <path d="M 110 140 L 110 160 M 110 140 L 140 140 M 110 160 L 140 160" fill="none" stroke="#ea580c" strokeWidth="2" />
+                            <line x1="130" y1="135" x2="130" y2="165" stroke="#ea580c" strokeWidth="2" />
+                            <line x1="130" y1="150" x2="180" y2="150" stroke="#ea580c" strokeWidth="2" />
+                            <text x="120" y="180" textAnchor="middle" className="math-font font-bold text-orange-600">fv</text>
+                            <g className="anim-mass">
+                                <rect x="180" y="70" width="100" height="100" fill="#3b82f6" fillOpacity="0.2" stroke="#1e40af" strokeWidth="2" />
+                                <text x="230" y="130" textAnchor="middle" className="math-font text-3xl font-bold text-blue-900">M</text>
+                                <circle cx="200" cy="180" r="10" fill="#64748b" />
+                                <circle cx="260" cy="180" r="10" fill="#64748b" />
+                                <line x1="280" y1="120" x2="360" y2="120" stroke="#dc2626" strokeWidth="3" markerEnd="url(#arrow-red)" />
+                                <text x="330" y="110" className="math-font font-bold text-red-700">F(t)</text>
+                                <line x1="230" y1="50" x2="280" y2="50" stroke="black" strokeWidth="2" markerEnd="url(#arrow)" />
+                                <text x="255" y="40" textAnchor="middle" className="math-font">x(t)</text>
+                            </g>
+                        </svg>
+                    );
+                case "mech_fbd":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <line x1="200" y1="30" x2="300" y2="30" stroke="gray" strokeWidth="1" strokeDasharray="4,2" markerEnd="url(#arrow)" />
+                            <text x="250" y="20" textAnchor="middle" className="math-font text-sm text-gray-600">+x</text>
+                            <rect x="200" y="80" width="100" height="100" fill="#f8fafc" stroke="#334155" strokeWidth="2" strokeDasharray="5,5" />
+                            <text x="250" y="135" textAnchor="middle" className="math-font text-2xl font-bold text-slate-400">M</text>
+                            <line x1="300" y1="130" x2="400" y2="130" stroke="#dc2626" strokeWidth="3" markerEnd="url(#arrow-red)" />
+                            <text x="360" y="120" className="math-font font-bold text-red-700 text-lg">F(s)</text>
+                            <line x1="200" y1="100" x2="100" y2="100" stroke="#16a34a" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="120" y="90" className="math-font font-bold text-green-700 text-lg">K · X(s)</text>
+                            <line x1="200" y1="130" x2="100" y2="130" stroke="#ea580c" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="90" y="120" className="math-font font-bold text-orange-600 text-lg">fv·s · X(s)</text>
+                            <line x1="200" y1="160" x2="100" y2="160" stroke="#2563eb" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="95" y="150" className="math-font font-bold text-blue-700 text-lg">M·s² · X(s)</text>
+                            <text x="250" y="220" textAnchor="middle" className="math-font text-lg font-bold">ΣF = M·s² X(s) ➔ F(s) - K X(s) - fv·s X(s) = M·s² X(s)</text>
+                        </svg>
+                    );
+                case "mech_rot_sys":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <rect x="50" y="80" width="20" height="90" fill="url(#hatch)" stroke="black" />
+                            <line x1="70" y1="80" x2="70" y2="170" stroke="black" strokeWidth="2" />
+                            <line x1="70" y1="125" x2="200" y2="125" stroke="black" strokeWidth="4" />
+                            <path d="M 100 110 Q 120 70 140 110 T 180 110" fill="none" stroke="#16a34a" strokeWidth="2" />
+                            <text x="140" y="90" textAnchor="middle" className="math-font font-bold text-green-700">K</text>
+                            <ellipse cx="230" cy="125" rx="30" ry="60" fill="#3b82f6" fillOpacity="0.2" stroke="#1e40af" strokeWidth="2" />
+                            <text x="230" y="130" textAnchor="middle" className="math-font text-3xl font-bold text-blue-900">J</text>
+                            <rect x="210" y="185" width="40" height="15" fill="#ea580c" fillOpacity="0.3" stroke="#ea580c" />
+                            <text x="230" y="215" textAnchor="middle" className="math-font font-bold text-orange-600">D</text>
+                            <path d="M 230 40 A 30 20 0 0 1 270 70" fill="none" stroke="#dc2626" strokeWidth="3" markerEnd="url(#arrow-red)" />
+                            <text x="280" y="55" className="math-font font-bold text-red-700">T(t)</text>
+                            <path d="M 250 125 A 20 15 0 0 1 265 145" fill="none" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="275" y="145" className="math-font font-bold text-sm">θ(t)</text>
+                        </svg>
+                    );
+                case "elec_components":
+                case "elec_rlc":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <line x1="100" y1="180" x2="400" y2="180" stroke="black" strokeWidth="2" /> 
+                            <line x1="100" y1="180" x2="100" y2="140" stroke="black" strokeWidth="2" /> 
+                            <line x1="100" y1="100" x2="100" y2="60" stroke="black" strokeWidth="2" /> 
+                            <line x1="100" y1="60" x2="150" y2="60" stroke="black" strokeWidth="2" /> 
+                            <line x1="230" y1="60" x2="270" y2="60" stroke="black" strokeWidth="2" /> 
+                            <line x1="350" y1="60" x2="400" y2="60" stroke="black" strokeWidth="2" /> 
+                            <line x1="400" y1="60" x2="400" y2="105" stroke="black" strokeWidth="2" /> 
+                            <line x1="400" y1="135" x2="400" y2="180" stroke="black" strokeWidth="2" /> 
+                            <circle cx="100" cy="120" r="20" fill="white" stroke="#dc2626" strokeWidth="2" />
+                            <text x="100" y="115" textAnchor="middle" className="math-font text-sm font-bold text-red-700">+</text>
+                            <text x="100" y="135" textAnchor="middle" className="math-font text-sm font-bold text-red-700">-</text>
+                            <text x="50" y="125" className="math-font font-bold text-red-700">V(s)</text>
+                            <path d="M 150 60 L 160 45 L 170 75 L 180 45 L 190 75 L 200 45 L 210 75 L 220 60 L 230 60" fill="none" stroke="#ea580c" strokeWidth="2" />
+                            <text x="190" y="35" textAnchor="middle" className="math-font font-bold text-orange-600">R</text>
+                            <path d="M 270 60 Q 280 35 290 60 Q 300 35 310 60 Q 320 35 330 60 Q 340 35 350 60" fill="none" stroke="#2563eb" strokeWidth="2" />
+                            <text x="310" y="35" textAnchor="middle" className="math-font font-bold text-blue-700">L·s</text>
+                            <line x1="380" y1="105" x2="420" y2="105" stroke="#16a34a" strokeWidth="3" />
+                            <line x1="380" y1="135" x2="420" y2="135" stroke="#16a34a" strokeWidth="3" />
+                            <text x="440" y="125" className="math-font font-bold text-green-700">1 / (C·s)</text>
+                            <path d="M 180 120 A 40 30 0 1 1 300 120" fill="none" stroke="black" strokeWidth="1.5" strokeDasharray="4,4" markerEnd="url(#arrow)" />
+                            <text x="240" y="130" textAnchor="middle" className="math-font font-bold">I(s)</text>
+                        </svg>
+                    );
+                case "liquid_level_sys":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <line x1="80" y1="30" x2="160" y2="30" stroke="#3b82f6" strokeWidth="6" />
+                            <line x1="160" y1="30" x2="160" y2="60" stroke="#3b82f6" strokeWidth="6" markerEnd="url(#arrow-blue)" />
+                            <text x="120" y="20" className="math-font font-bold text-blue-700">Q_in(t)</text>
+                            <path d="M 120 50 L 120 200 L 280 200 L 280 50" fill="none" stroke="#475569" strokeWidth="4" />
+                            <rect x="122" y="100" width="156" height="98" fill="#93c5fd" fillOpacity="0.5" />
+                            <line x1="100" y1="100" x2="120" y2="100" stroke="gray" strokeDasharray="3,3" />
+                            <line x1="100" y1="200" x2="120" y2="200" stroke="gray" strokeDasharray="3,3" />
+                            <line x1="110" y1="100" x2="110" y2="200" stroke="black" strokeWidth="1.5" markerStart="url(#arrow)" markerEnd="url(#arrow)" />
+                            <text x="90" y="155" className="math-font font-bold">h(t)</text>
+                            <text x="200" y="150" textAnchor="middle" className="math-font font-bold text-xl text-blue-900">A, C</text>
+                            <line x1="280" y1="180" x2="350" y2="180" stroke="#475569" strokeWidth="4" />
+                            <polygon points="310,165 330,195 310,195 330,165" fill="#ea580c" />
+                            <text x="320" y="215" textAnchor="middle" className="math-font font-bold text-orange-600">R (Valve)</text>
+                            <line x1="360" y1="180" x2="420" y2="180" stroke="#3b82f6" strokeWidth="3" markerEnd="url(#arrow-blue)" />
+                            <text x="390" y="170" className="math-font font-bold text-blue-700">Q_out(t)</text>
+                        </svg>
+                    );
+                case "fluid_power_sys":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <rect x="100" y="70" width="200" height="100" fill="#f1f5f9" stroke="#334155" strokeWidth="4" />
+                            <rect x="180" y="72" width="20" height="96" fill="#1e293b" />
+                            <line x1="200" y1="120" x2="380" y2="120" stroke="#64748b" strokeWidth="12" />
+                            <line x1="130" y1="30" x2="130" y2="70" stroke="#3b82f6" strokeWidth="8" markerEnd="url(#arrow-blue)" />
+                            <text x="130" y="20" textAnchor="middle" className="math-font font-bold text-blue-700">P_1</text>
+                            <line x1="270" y1="70" x2="270" y2="30" stroke="#dc2626" strokeWidth="8" markerEnd="url(#arrow-red)" />
+                            <text x="270" y="20" textAnchor="middle" className="math-font font-bold text-red-700">P_2</text>
+                            <text x="190" y="145" textAnchor="middle" fill="white" className="math-font font-bold text-lg">A</text>
+                            <line x1="320" y1="85" x2="360" y2="85" stroke="black" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="340" y="75" textAnchor="middle" className="math-font font-bold">x(t)</text>
+                            <line x1="380" y1="120" x2="440" y2="120" stroke="#16a34a" strokeWidth="4" markerEnd="url(#arrow-green)" />
+                            <text x="420" y="110" className="math-font font-bold text-green-700 text-xl">F</text>
+                        </svg>
+                    );
+                case "thermal_sys":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <rect x="50" y="20" width="400" height="210" fill="#f0f9ff" stroke="none" rx="8" />
+                            <text x="70" y="45" className="math-font font-bold text-blue-600">Ambient, T_o</text>
+                            <rect x="150" y="60" width="200" height="130" fill="#fef08a" stroke="#ca8a04" strokeWidth="15" rx="8" />
+                            <text x="250" y="65" textAnchor="middle" className="math-font font-bold text-orange-700">Insulation, R</text>
+                            <rect x="157" y="67" width="186" height="116" fill="#fee2e2" />
+                            <text x="250" y="110" textAnchor="middle" className="math-font text-2xl font-bold text-red-800">T_i</text>
+                            <text x="250" y="135" textAnchor="middle" className="math-font font-bold text-red-700">Capacitance, C</text>
+                            <path d="M 180 150 Q 190 120 200 150 T 220 150" fill="none" stroke="#dc2626" strokeWidth="4" />
+                            <line x1="170" y1="160" x2="230" y2="160" stroke="#991b1b" strokeWidth="4" />
+                            <text x="200" y="175" textAnchor="middle" className="math-font font-bold text-red-600">q_in</text>
+                            <line x1="350" y1="125" x2="410" y2="125" stroke="#3b82f6" strokeWidth="3" strokeDasharray="4,2" markerEnd="url(#arrow-blue)" />
+                            <text x="380" y="115" textAnchor="middle" className="math-font font-bold text-blue-600">q_out</text>
+                        </svg>
+                    );
+                case "electromech_sys":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            {arrowDef}
+                            <rect x="50" y="60" width="100" height="120" fill="none" stroke="#64748b" strokeWidth="2" />
+                            <circle cx="50" cy="120" r="15" fill="white" stroke="#dc2626" strokeWidth="2" />
+                            <text x="50" y="115" textAnchor="middle" className="math-font font-bold text-red-700" fontSize="10">+</text>
+                            <text x="50" y="130" textAnchor="middle" className="math-font font-bold text-red-700" fontSize="10">-</text>
+                            <text x="25" y="125" textAnchor="end" className="math-font font-bold text-red-700">V_a</text>
+                            <rect x="80" y="55" width="25" height="10" fill="white" stroke="#ea580c" strokeWidth="2" />
+                            <text x="92" y="45" textAnchor="middle" className="math-font font-bold text-orange-600">R_a</text>
+                            <path d="M 120 60 Q 125 50 130 60 Q 135 50 140 60 Q 145 50 150 60" fill="none" stroke="#2563eb" strokeWidth="2" />
+                            <text x="135" y="45" textAnchor="middle" className="math-font font-bold text-blue-700">L_a</text>
+                            <line x1="80" y1="75" x2="120" y2="75" stroke="#475569" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="100" y="90" textAnchor="middle" className="math-font font-bold text-slate-700">I_a</text>
+                            <circle cx="150" cy="120" r="22" fill="#f8fafc" stroke="#334155" strokeWidth="2" />
+                            <text x="150" y="125" textAnchor="middle" className="math-font font-bold text-slate-800">E_b</text>
+                            <rect x="145" y="94" width="10" height="4" fill="#334155" />
+                            <rect x="145" y="142" width="10" height="4" fill="#334155" />
+                            <line x1="172" y1="120" x2="340" y2="120" stroke="#94a3b8" strokeWidth="6" strokeLinecap="round" />
+                            <path d="M 175 100 Q 200 80 220 110" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="3,3" markerEnd="url(#arrow-red)" />
+                            <text x="210" y="85" textAnchor="middle" className="math-font font-bold text-red-600">T_m</text>
+                            <ellipse cx="280" cy="120" rx="15" ry="40" fill="#3b82f6" fillOpacity="0.3" stroke="#1e40af" strokeWidth="2" />
+                            <text x="280" y="125" textAnchor="middle" className="math-font text-xl font-bold text-blue-900">J</text>
+                            <rect x="330" y="135" width="20" height="30" fill="#ea580c" fillOpacity="0.4" stroke="#ea580c" strokeWidth="2" />
+                            <line x1="330" y1="165" x2="350" y2="165" stroke="black" strokeWidth="2" />
+                            <line x1="325" y1="170" x2="355" y2="170" stroke="black" strokeWidth="2" />
+                            <text x="340" y="185" textAnchor="middle" className="math-font font-bold text-orange-700">D</text>
+                            <path d="M 300 85 A 20 15 0 0 1 315 105" fill="none" stroke="black" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                            <text x="325" y="95" className="math-font font-bold">ω, θ</text>
+                        </svg>
+                    );
+                case "analogy_table":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 500 250">
+                            <rect x="10" y="20" width="480" height="210" rx="8" fill="white" stroke="#e2e8f0" strokeWidth="2" />
+                            <rect x="10" y="20" width="480" height="40" rx="8" fill="#1e293b" />
+                            <text x="125" y="45" textAnchor="middle" className="svg-label text-white">Translational Mechanical</text>
+                            <text x="365" y="45" textAnchor="middle" className="svg-label text-white">Electrical (Force-Voltage)</text>
+                            <line x1="250" y1="20" x2="250" y2="230" stroke="#cbd5e1" strokeWidth="2" />
+                            <text x="125" y="85" textAnchor="middle" className="math-font text-lg font-bold text-red-600">Force, F</text>
+                            <text x="365" y="85" textAnchor="middle" className="math-font text-lg font-bold text-red-600">Voltage, V</text>
+                            <line x1="10" y1="95" x2="490" y2="95" stroke="#f1f5f9" strokeWidth="2" />
+                            <text x="125" y="120" textAnchor="middle" className="math-font text-lg font-bold text-blue-600">Mass, M</text>
+                            <text x="365" y="120" textAnchor="middle" className="math-font text-lg font-bold text-blue-600">Inductance, L</text>
+                            <line x1="10" y1="130" x2="490" y2="130" stroke="#f1f5f9" strokeWidth="2" />
+                            <text x="125" y="155" textAnchor="middle" className="math-font text-lg font-bold text-orange-600">Damper, fv</text>
+                            <text x="365" y="155" textAnchor="middle" className="math-font text-lg font-bold text-orange-600">Resistance, R</text>
+                            <line x1="10" y1="165" x2="490" y2="165" stroke="#f1f5f9" strokeWidth="2" />
+                            <text x="125" y="190" textAnchor="middle" className="math-font text-lg font-bold text-green-600">Spring, K</text>
+                            <text x="365" y="190" textAnchor="middle" className="math-font text-lg font-bold text-green-600">1 / Capacitance, 1/C</text>
+                            <line x1="10" y1="200" x2="490" y2="200" stroke="#f1f5f9" strokeWidth="2" />
+                            <text x="125" y="220" textAnchor="middle" className="math-font text-lg font-bold text-gray-700">Velocity, v = dx/dt</text>
+                            <text x="365" y="220" textAnchor="middle" className="math-font text-lg font-bold text-gray-700">Current, I = dq/dt</text>
+                        </svg>
+                    );
+                case "assessment_model":
+                    return (
+                        <svg width="100%" height="100%" viewBox="0 0 600 250">
+                            {arrowDef}
+                            <rect x="20" y="40" width="15" height="150" fill="url(#hatch)" stroke="black" />
+                            <line x1="35" y1="40" x2="35" y2="190" stroke="black" strokeWidth="2" />
+                            <line x1="20" y1="190" x2="580" y2="190" stroke="black" strokeWidth="3" />
+                            <path d="M 35 80 L 50 80 L 55 70 L 65 90 L 75 70 L 85 90 L 95 70 L 105 90 L 115 70 L 120 80 L 150 80" fill="none" stroke="#16a34a" strokeWidth="2" />
+                            <text x="90" y="60" textAnchor="middle" className="math-font font-bold text-green-700">K_1</text>
+                            <line x1="35" y1="120" x2="70" y2="120" stroke="#ea580c" strokeWidth="2" />
+                            <path d="M 70 110 L 70 130 M 70 110 L 100 110 M 70 130 L 100 130" fill="none" stroke="#ea580c" strokeWidth="2" />
+                            <line x1="90" y1="105" x2="90" y2="135" stroke="#ea580c" strokeWidth="2" />
+                            <line x1="90" y1="120" x2="150" y2="120" stroke="#ea580c" strokeWidth="2" />
+                            <text x="85" y="150" textAnchor="middle" className="math-font font-bold text-orange-600">fv_1</text>
+                            <rect x="150" y="60" width="90" height="130" fill="#3b82f6" fillOpacity="0.2" stroke="#1e40af" strokeWidth="2" />
+                            <text x="195" y="130" textAnchor="middle" className="math-font text-3xl font-bold text-blue-900">M_1</text>
+                            <line x1="195" y1="40" x2="245" y2="40" stroke="black" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="220" y="30" textAnchor="middle" className="math-font font-bold">x_1(t)</text>
+                            <circle cx="170" cy="190" r="8" fill="#64748b" />
+                            <circle cx="220" cy="190" r="8" fill="#64748b" />
+                            <path d="M 240 80 L 260 80 L 265 70 L 275 90 L 285 70 L 295 90 L 305 70 L 315 90 L 325 70 L 330 80 L 360 80" fill="none" stroke="#16a34a" strokeWidth="2" />
+                            <text x="300" y="60" textAnchor="middle" className="math-font font-bold text-green-700">K_2</text>
+                            <line x1="240" y1="120" x2="280" y2="120" stroke="#ea580c" strokeWidth="2" />
+                            <path d="M 280 110 L 280 130 M 280 110 L 310 110 M 280 130 L 310 130" fill="none" stroke="#ea580c" strokeWidth="2" />
+                            <line x1="300" y1="105" x2="300" y2="135" stroke="#ea580c" strokeWidth="2" />
+                            <line x1="300" y1="120" x2="360" y2="120" stroke="#ea580c" strokeWidth="2" />
+                            <text x="295" y="150" textAnchor="middle" className="math-font font-bold text-orange-600">fv_2</text>
+                            <rect x="360" y="60" width="90" height="130" fill="#3b82f6" fillOpacity="0.2" stroke="#1e40af" strokeWidth="2" />
+                            <text x="405" y="130" textAnchor="middle" className="math-font text-3xl font-bold text-blue-900">M_2</text>
+                            <line x1="405" y1="40" x2="455" y2="40" stroke="black" strokeWidth="2" markerEnd="url(#arrow)" />
+                            <text x="430" y="30" textAnchor="middle" className="math-font font-bold">x_2(t)</text>
+                            <circle cx="380" cy="190" r="8" fill="#64748b" />
+                            <circle cx="430" cy="190" r="8" fill="#64748b" />
+                            <line x1="450" y1="100" x2="540" y2="100" stroke="#dc2626" strokeWidth="3" markerEnd="url(#arrow-red)" />
+                            <text x="500" y="90" className="math-font font-bold text-xl text-red-700">F(t)</text>
+                        </svg>
+                    );
+                case "assessment_mech_rot":
+                    return (
+                        <svg viewBox="0 0 800 300" width="100%" height="300" xmlns="http://www.w3.org/2000/svg">
+                            {arrowDef}
+                            <line x1="50" y1="100" x2="50" y2="200" stroke="black" strokeWidth="3"/>
+                            <path d="M50,110 L30,130 M50,130 L30,150 M50,150 L30,170 M50,170 L30,190 M50,190 L30,210" stroke="black" strokeWidth="1.5"/>
+                            <text x="30" y="90" fontFamily="serif" fontSize="14" textAnchor="middle">Engine</text>
+                            <text x="30" y="105" fontFamily="serif" fontSize="14" textAnchor="middle">chassis</text>
+
+                            <line x1="750" y1="100" x2="750" y2="200" stroke="black" strokeWidth="3"/>
+                            <path d="M750,110 L770,130 M750,130 L770,150 M750,150 L770,170 M750,170 L770,190 M750,190 L770,210" stroke="black" strokeWidth="1.5"/>
+                            <text x="750" y="230" fontFamily="serif" fontSize="14" textAnchor="middle">Locked</text>
+                            <text x="750" y="245" fontFamily="serif" fontSize="14" textAnchor="middle">differential</text>
+
+                            <line x1="50" y1="150" x2="100" y2="150" stroke="black" strokeWidth="2"/>
+                            <line x1="100" y1="100" x2="100" y2="200" stroke="black" strokeWidth="2"/>
+                            <line x1="250" y1="100" x2="250" y2="200" stroke="black" strokeWidth="2"/>
+                            <line x1="250" y1="150" x2="300" y2="150" stroke="black" strokeWidth="2"/>
+
+                            <path d="M100,100 L120,100 L130,80 L150,120 L170,80 L190,120 L210,80 L230,100 L250,100" stroke="black" strokeWidth="2" fill="none"/>
+                            <text x="175" y="70" fontFamily="serif" fontSize="16" fontStyle="italic">k<tspan baselineShift="sub" fontSize="12">1</tspan></text>
+
+                            <line x1="100" y1="200" x2="150" y2="200" stroke="black" strokeWidth="2"/>
+                            <rect x="150" y="185" width="40" height="30" fill="none" stroke="black" strokeWidth="2"/>
+                            <line x1="190" y1="200" x2="250" y2="200" stroke="black" strokeWidth="2"/>
+                            <line x1="170" y1="180" x2="170" y2="220" stroke="black" strokeWidth="2"/>
+                            <line x1="150" y1="200" x2="170" y2="200" stroke="black" strokeWidth="2"/>
+                            <text x="175" y="240" fontFamily="serif" fontSize="16" fontStyle="italic">b<tspan baselineShift="sub" fontSize="12">1</tspan></text>
+
+                            <ellipse cx="320" cy="150" rx="20" ry="70" fill="#e2e8f0" stroke="black" strokeWidth="2"/>
+                            <line x1="300" y1="150" x2="340" y2="150" stroke="black" strokeWidth="4"/>
+                            <text x="320" y="60" fontFamily="serif" fontSize="14" textAnchor="middle">Flywheel mass</text>
+                            <text x="320" y="75" fontFamily="serif" fontSize="14" textAnchor="middle">inertia (J<tspan baselineShift="sub" fontSize="10">1</tspan>)</text>
+
+                            <path d="M350,120 A 30 30 0 0 1 350,180" stroke="#dc2626" strokeWidth="2" fill="none" markerEnd="url(#arrow-red)"/>
+                            <text x="360" y="195" fill="#dc2626" fontFamily="serif" fontSize="16" fontStyle="italic" fontWeight="bold">T(t)</text>
+                            
+                            <path d="M280,120 A 30 30 0 0 0 280,180" stroke="blue" strokeWidth="2" fill="none" markerEnd="url(#arrow-blue)"/>
+                            <text x="260" y="195" fill="blue" fontFamily="serif" fontSize="16" fontStyle="italic">θ<tspan baselineShift="sub" fontSize="12">1</tspan></text>
+
+                            <line x1="340" y1="150" x2="400" y2="150" stroke="black" strokeWidth="2"/>
+                            <line x1="400" y1="100" x2="400" y2="200" stroke="black" strokeWidth="2"/>
+                            <line x1="550" y1="100" x2="550" y2="200" stroke="black" strokeWidth="2"/>
+                            <line x1="550" y1="150" x2="600" y2="150" stroke="black" strokeWidth="2"/>
+
+                            <path d="M400,100 L420,100 L430,80 L450,120 L470,80 L490,120 L510,80 L530,100 L550,100" stroke="black" strokeWidth="2" fill="none"/>
+                            <text x="475" y="70" fontFamily="serif" fontSize="16" fontStyle="italic">k<tspan baselineShift="sub" fontSize="12">2</tspan></text>
+
+                            <line x1="400" y1="200" x2="450" y2="200" stroke="black" strokeWidth="2"/>
+                            <rect x="450" y="185" width="40" height="30" fill="none" stroke="black" strokeWidth="2"/>
+                            <line x1="490" y1="200" x2="550" y2="200" stroke="black" strokeWidth="2"/>
+                            <line x1="470" y1="180" x2="470" y2="220" stroke="black" strokeWidth="2"/>
+                            <line x1="450" y1="200" x2="470" y2="200" stroke="black" strokeWidth="2"/>
+                            <text x="475" y="240" fontFamily="serif" fontSize="16" fontStyle="italic">b<tspan baselineShift="sub" fontSize="12">2</tspan></text>
+
+                            <circle cx="600" cy="150" r="5" fill="black"/>
+                            <text x="600" y="210" fontFamily="serif" fontSize="14" textAnchor="middle">intermediate</text>
+                            <text x="600" y="225" fontFamily="serif" fontSize="14" textAnchor="middle">junction node (θ<tspan baselineShift="sub" fontSize="10">2</tspan>)</text>
+                            <path d="M585,130 A 20 20 0 0 1 615,130" stroke="blue" strokeWidth="1.5" fill="none" markerEnd="url(#arrow-blue)"/>
+                            <text x="590" y="120" fill="blue" fontFamily="serif" fontSize="16" fontStyle="italic">θ<tspan baselineShift="sub" fontSize="12">2</tspan></text>
+
+                            <line x1="600" y1="150" x2="620" y2="150" stroke="black" strokeWidth="2"/>
+                            <path d="M620,150 L630,130 L650,170 L670,130 L690,170 L710,130 L730,150 L750,150" stroke="black" strokeWidth="2" fill="none"/>
+                            <text x="685" y="110" fontFamily="serif" fontSize="14" textAnchor="middle">driveshaft (k<tspan baselineShift="sub" fontSize="10">3</tspan>)</text>
+                        </svg>
+                    );
+                default:
+                    return <div>Rajah tidak dijumpai</div>;
+            }
+        };
+
+        const App = () => {
+            const [lang, setLang] = React.useState('ms');
+            const [catIndex, setCatIndex] = React.useState(0);
+            const [contentIndex, setContentIndex] = React.useState(0);
+            const [score, setScore] = React.useState(0);
+            const [selectedAnswer, setSelectedAnswer] = React.useState(null);
+            const [isAnswerChecked, setIsAnswerChecked] = React.useState(false);
+            const [sidebarOpen, setSidebarOpen] = React.useState(false);
+            const [courseCompleted, setCourseCompleted] = React.useState(false);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            
+            const [studentName, setStudentName] = React.useState('');
+            const [studentId, setStudentId] = React.useState('');
+            
+            const currentCatId = categories[catIndex].id;
+            const currentContents = contentData[currentCatId];
+            const currentContent = currentContents[contentIndex];
+            const isLastContent = contentIndex === currentContents.length - 1;
+            const isLastCategory = catIndex === categories.length - 1;
+
+            React.useEffect(() => {
+                if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                    setIsSpeaking(false);
+                }
+            }, [contentIndex, catIndex, lang]);
+
+            React.useEffect(() => {
+                if (window.speechSynthesis) window.speechSynthesis.getVoices();
+            }, []);
+
+            const toggleSpeech = (textToSpeak) => {
+                if (!window.speechSynthesis) {
+                    alert(lang === 'ms' ? "Pelayar anda tidak menyokong fungsi suara." : "Your browser does not support speech synthesis.");
+                    return;
+                }
+
+                if (isSpeaking) {
+                    window.speechSynthesis.cancel();
+                    setIsSpeaking(false);
+                } else {
+                    window.speechSynthesis.cancel();
+                    
+                    let cleanText = textToSpeak.replace(/\*\*/g, '').replace(/_/g, ' ');
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    
+                    const voices = window.speechSynthesis.getVoices();
+                    let selectedVoice = null;
+
+                    if (lang === 'ms') {
+                        selectedVoice = voices.find(v => v.lang === 'ms-MY' || v.lang === 'id-ID') || 
+                                        voices.find(v => v.lang.includes('ms') || v.lang.includes('id'));
+                    } else {
+                        selectedVoice = voices.find(v => (v.lang === 'en-SG' || v.lang === 'en-IN') && (v.name.includes('Female') || v.name.includes('Google'))) ||
+                                        voices.find(v => v.lang.includes('en') && (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Victoria'))) ||
+                                        voices.find(v => v.lang.includes('en'));
+                    }
+
+                    if (selectedVoice) {
+                        utterance.voice = selectedVoice;
+                    } else {
+                        utterance.lang = lang === 'ms' ? 'ms-MY' : 'en-US';
+                    }
+                    
+                    utterance.rate = 0.9;
+                    utterance.onend = () => setIsSpeaking(false);
+                    utterance.onerror = () => setIsSpeaking(false);
+                    
+                    window.speechSynthesis.speak(utterance);
+                    setIsSpeaking(true);
+                }
+            };
+
+            const TTSButton = ({ text }) => (
+                <button 
+                    onClick={() => toggleSpeech(text)}
+                    className={`ml-3 p-2 rounded-full transition-colors flex items-center justify-center no-print ${isSpeaking ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+                    title={isSpeaking ? "Berhenti" : "Dengar Penerangan"}
+                >
+                    {isSpeaking ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z M9 9h6v6H9z"></path></svg>
+                    ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10v4a2 2 0 002 2h2.586l4.707 4.707A.996.996 0 0015 20V4a.996.996 0 00-1.707-.707L9.586 8H7a2 2 0 00-2 2z"></path></svg>
+                    )}
+                </button>
+            );
+
+            const processSubscript = (text) => {
+                const parts = text.split(/([A-Za-zθΘ]+_\w+)/g);
+                return parts.map((part, i) => {
+                    if (part.includes('_')) {
+                        const [base, sub] = part.split('_');
+                        return <span key={i}>{base}<sub>{sub}</sub></span>;
+                    }
+                    return <span key={i}>{part}</span>;
+                });
+            };
+
+            const formatText = (text) => {
+                if (!text) return null;
+                const lines = text.split('\n');
+                return lines.map((line, lineIndex) => {
+                    const boldParts = line.split(/(\*\*.*?\*\*)/g);
+                    const formattedLine = boldParts.map((boldPart, bIndex) => {
+                        if (boldPart.startsWith('**') && boldPart.endsWith('**')) {
+                            const content = boldPart.slice(2, -2);
+                            return <strong key={bIndex}>{processSubscript(content)}</strong>;
+                        }
+                        return <span key={bIndex}>{processSubscript(boldPart)}</span>;
+                    });
+                    
+                    return (
+                        <React.Fragment key={lineIndex}>
+                            {formattedLine}
+                            {lineIndex < lines.length - 1 && <br />}
+                        </React.Fragment>
+                    );
+                });
+            };
+
+            const toggleLang = () => setLang(l => l === 'ms' ? 'en' : 'ms');
+
+            const handleCheckAnswer = () => {
+                if (selectedAnswer === null) return;
+                setIsAnswerChecked(true);
+                if (selectedAnswer === currentContent.answer) {
+                    setScore(s => s + 1);
+                }
+            };
+
+            const handleNext = () => {
+                if (isLastContent) {
+                    if (!isLastCategory) {
+                        setCatIndex(c => c + 1);
+                        setContentIndex(0);
+                        setScore(0);
+                        setSelectedAnswer(null);
+                        setIsAnswerChecked(false);
+                        window.scrollTo(0,0);
+                    } else {
+                        setCourseCompleted(true);
+                    }
+                } else {
+                    setContentIndex(c => c + 1);
+                    setSelectedAnswer(null);
+                    setIsAnswerChecked(false);
+                    window.scrollTo(0,0);
+                }
+            };
+
+            const selectCategory = (index) => {
+                setCatIndex(index);
+                setContentIndex(0);
+                setScore(0);
+                setSelectedAnswer(null);
+                setIsAnswerChecked(false);
+                setSidebarOpen(false);
+                setCourseCompleted(false);
+                window.scrollTo(0,0);
+            };
+
+            const renderContent = () => {
+                if (currentContent.type === "info") {
+                    const textToRead = currentContent.content[lang];
+                    return (
+                        <div className="space-y-6">
+                            <div className="bg-blue-50 text-blue-800 text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">
+                                {t[lang].infoBadge}
+                            </div>
+                            <div className="flex items-center border-b pb-2">
+                                <h2 className="text-2xl font-bold text-gray-800">{currentContent.title[lang]}</h2>
+                                <TTSButton text={textToRead} />
+                            </div>
+                            <div className="text-gray-700 leading-relaxed text-lg">
+                                {formatText(currentContent.content[lang])}
+                            </div>
+                            <div className="mt-8 flex justify-end">
+                                <button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition transform hover:scale-105 active:scale-95">
+                                    {isLastContent && isLastCategory ? t[lang].completed : t[lang].understandBtn}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                } else if (currentContent.type === "quiz") {
+                    const isCorrect = isAnswerChecked && selectedAnswer === currentContent.answer;
+                    const textToRead = currentContent.q[lang];
+
+                    return (
+                        <div className="space-y-6">
+                            <div className="bg-purple-50 text-purple-800 text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">
+                                {t[lang].quizBadge}
+                            </div>
+                            <div className="flex items-center border-b pb-2">
+                                <h2 className="text-2xl font-bold text-gray-800">{currentContent.title[lang]}</h2>
+                                <TTSButton text={textToRead} />
+                            </div>
+                            <div className="text-gray-800 text-lg font-medium">
+                                {formatText(currentContent.q[lang])}
+                            </div>
+                            <div className="space-y-3 mt-4">
+                                <p className="text-sm text-gray-500 font-semibold">{t[lang].selectAnswer}</p>
+                                {currentContent.options[lang].map((opt, i) => (
+                                    <label key={i} className={`flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
+                                        isAnswerChecked ? 
+                                            (i === currentContent.answer ? 'bg-green-50 border-green-500 text-green-900 shadow-sm' : 
+                                            (selectedAnswer === i ? 'bg-red-50 border-red-500 text-red-900' : 'opacity-60 bg-gray-50 border-gray-200'))
+                                        : 
+                                            (selectedAnswer === i ? 'bg-blue-50 border-blue-500 shadow-sm' : 'hover:bg-gray-50 border-gray-200')
+                                    }`}>
+                                        <input 
+                                            type="radio" 
+                                            name="quiz-option" 
+                                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 mr-3"
+                                            checked={selectedAnswer === i}
+                                            onChange={() => !isAnswerChecked && setSelectedAnswer(i)}
+                                            disabled={isAnswerChecked}
+                                        />
+                                        <span className="text-base">{formatText(opt)}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            {isAnswerChecked && (
+                                <div className={`p-4 rounded-xl mt-4 font-medium flex flex-col gap-3 ${isCorrect ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'}`}>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xl">{isCorrect ? '✨' : '❌'}</span>
+                                        <span className="font-bold">{isCorrect ? t[lang].correct : t[lang].incorrect}</span>
+                                    </div>
+                                    {!isCorrect && (
+                                        <div className="text-sm bg-white/60 p-3 rounded-lg border border-red-200 mt-1">
+                                            <strong>{t[lang].correctAnswerWas}</strong> {formatText(currentContent.options[lang][currentContent.answer])}
+                                        </div>
+                                    )}
+                                    {currentContent.explanation && (
+                                        <div className={`text-sm p-3 rounded-lg mt-1 shadow-inner ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                            <strong>{t[lang].explanation}</strong><br/>
+                                            <span className="text-gray-700 leading-relaxed block mt-1">
+                                                {formatText(currentContent.explanation[lang])}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="mt-8 flex justify-end nav-buttons">
+                                {!isAnswerChecked ? (
+                                    <button 
+                                        onClick={handleCheckAnswer} 
+                                        disabled={selectedAnswer === null}
+                                        className={`font-semibold py-3 px-6 rounded-xl shadow-md transition ${selectedAnswer !== null ? 'bg-indigo-600 hover:bg-indigo-700 text-white transform hover:scale-105 active:scale-95' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                                    >
+                                        {t[lang].checkAnswer}
+                                    </button>
+                                ) : (
+                                    <button 
+                                        onClick={handleNext} 
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                                    >
+                                        {isLastContent && isLastCategory ? t[lang].completed : t[lang].nextQuestion}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    );
+                } else if (currentContent.type === "assessment") {
+                    const textToRead = currentContent.content[lang];
+                    return (
+                        <div className="space-y-6">
+                            <div className="bg-amber-50 text-amber-800 text-xs font-bold px-3 py-1 rounded-full inline-block mb-2 no-print">
+                                {t[lang].assessmentBadge} ({contentIndex + 1}/{currentContents.length})
+                            </div>
+                            <div className="flex items-center border-b pb-4">
+                                <h2 className="text-3xl font-bold text-gray-800">{currentContent.title[lang]}</h2>
+                                <TTSButton text={textToRead} />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">{t[lang].studentName}</label>
+                                    <input 
+                                        type="text" 
+                                        value={studentName}
+                                        onChange={(e) => setStudentName(e.target.value)}
+                                        className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none" 
+                                        placeholder="Name..." 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">{t[lang].studentId}</label>
+                                    <input 
+                                        type="text" 
+                                        value={studentId}
+                                        onChange={(e) => setStudentId(e.target.value)}
+                                        className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none" 
+                                        placeholder="Student ID..." 
+                                    />
+                                </div>
+                            </div>
+                            <div className="text-gray-800 leading-relaxed text-lg bg-blue-50 p-6 rounded-xl border border-blue-100">
+                                {formatText(currentContent.content[lang])}
+                            </div>
+                            <div className="print-space"></div>
+                            <div className="print-space" style={{marginTop: '40px'}}></div>
+                            <div className="mt-8 flex justify-between items-center no-print">
+                                <button onClick={() => window.print()} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition flex items-center gap-2">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                    {t[lang].printPdf}
+                                </button>
+                                <button onClick={handleNext} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition transform hover:scale-105 active:scale-95">
+                                    {isLastContent && isLastCategory ? t[lang].completed : t[lang].nextQuestion}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
+                    <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center z-20 shadow-md no-print">
+                        <div className="font-bold truncate">{t[lang].title}</div>
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 bg-slate-800 rounded">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
+                    </div>
+
+                    <div className={`sidebar ${sidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-72 bg-slate-900 text-white shadow-xl flex flex-col absolute md:relative z-10 min-h-screen md:min-h-0`}>
+                        <div className="p-6">
+                            <h1 className="text-xl font-extrabold tracking-tight mb-1">{t[lang].title}</h1>
+                            <p className="text-slate-400 text-sm">{t[lang].subtitle}</p>
+                        </div>
+                        <div className="flex-1 overflow-y-auto nav-scrollbar px-4 pb-6 space-y-2">
+                            {categories.map((cat, i) => (
+                                <button 
+                                    key={cat.id} 
+                                    onClick={() => selectCategory(i)}
+                                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
+                                        catIndex === i 
+                                            ? 'bg-blue-600 text-white shadow-md' 
+                                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                    }`}
+                                >
+                                    {cat.title[lang]}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col max-h-screen overflow-hidden relative print-full-width">
+                        <div className="topbar glass-panel border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10 shadow-sm">
+                            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider hidden sm:block">
+                                {categories[catIndex].title[lang]}
+                            </div>
+                            <div className="flex items-center gap-4 ml-auto">
+                                {currentContent.type !== 'assessment' && (
+                                    <div className="bg-white border px-4 py-1.5 rounded-full text-sm font-medium shadow-sm flex items-center gap-2">
+                                        <span className="text-amber-500 text-lg">★</span> 
+                                        <span className="text-gray-600 hidden sm:inline">{t[lang].score}:</span> {score}
+                                    </div>
+                                )}
+                                <button 
+                                    onClick={toggleLang}
+                                    className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow-sm"
+                                >
+                                    {t[lang].langToggle}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row gap-6 bg-slate-50 print-full-width">
+                            <div className={`print-full-width w-full xl:w-5/12 min-h-[300px] xl:min-h-0 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col overflow-hidden ${currentContent.diagram === 'none' ? 'hidden' : 'flex'}`}>
+                                <div className="bg-gray-50 px-4 py-3 border-b text-sm font-bold text-gray-700 flex justify-between">
+                                    <span>Visual</span>
+                                    <span className="text-gray-400 font-normal">{t[lang].questionText} {contentIndex + 1} {t[lang].of} {currentContents.length}</span>
+                                </div>
+                                <div className="flex-1 p-4 flex items-center justify-center relative overflow-hidden bg-grid-slate-100">
+                                    <div className="absolute inset-0 z-0 opacity-20" style={{backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
+                                    <div className="w-full h-full relative z-10 drop-shadow-sm">
+                                        <DiagramViewer diagramType={currentContent.diagram} lang={lang} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`w-full ${currentContent.diagram === 'none' ? 'xl:w-full' : 'xl:w-7/12'} bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col print-full-width`}>
+                                <div className="p-6 sm:p-8 flex-1 overflow-y-auto">
+                                    {courseCompleted ? (
+                                        <div className="text-center py-12 space-y-4">
+                                            <div className="text-6xl mb-4">🏆</div>
+                                            <h2 className="text-3xl font-bold text-gray-800">{t[lang].completed}</h2>
+                                            <p className="text-gray-600 text-lg">{t[lang].finishCourse}</p>
+                                            <div className="mt-8">
+                                                <button onClick={() => selectCategory(0)} className="bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-blue-700 transition">
+                                                    Mula Semula / Restart
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        renderContent()
+                                    )}
+                                </div>
+                                
+                                <div className="progress-bar h-2 bg-gray-100 w-full mt-auto rounded-b-2xl overflow-hidden">
+                                    <div 
+                                        className="h-full bg-blue-500 transition-all duration-300" 
+                                        style={{width: `${((contentIndex + 1) / currentContents.length) * 100}%`}}
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
