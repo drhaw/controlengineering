@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Versi 2: Portal Pengukuhan - Animasi Interaktif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #ecfdf5; }
+        .svg-text { font-family: 'Inter', sans-serif; font-size: 14px; fill: #064e3b; }
+        .svg-text-math { font-family: 'Times New Roman', serif; font-style: italic; font-size: 16px; fill: #022c22; font-weight: bold;}
+        .block-rect { fill: #ffffff; stroke: #059669; stroke-width: 2; rx: 6; }
+        .sum-circle { fill: #ffffff; stroke: #d97706; stroke-width: 2; }
+        .signal-line { stroke: #065f46; stroke-width: 2; fill: none; }
+        .math-eq { font-family: 'Times New Roman', Times, serif; font-size: 1.125rem; background-color: #f0fdf4; padding: 0.5rem 1rem; border-left: 4px solid #10b981; border-radius: 0.25rem; margin-bottom: 0.5rem; }
+        
+        .answer-panel { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .answer-panel.open { max-height: 1000px; }
+        
+        /* Language Toggle */
+        body.en [data-lang="ms"] { display: none !important; }
+        body.ms [data-lang="en"] { display: none !important; }
+
+        /* SVG Animation Classes */
+        .svg-part { transition: opacity 0.5s ease-in-out; }
+        
+        /* Print Styles for PDF Worksheet */
+        @media print {
+            .no-print, nav { display: none !important; }
+            body { background-color: #ffffff; margin: 0; padding: 0; }
+            #printable-worksheet { display: block !important; }
+            .print-break { page-break-inside: avoid; margin-bottom: 40px; }
+            .print-space { height: 270px; border: 2px dashed #cbd5e1; border-radius: 8px; margin-top: 15px; }
+        }
+    </style>
+</head>
+<body class="text-emerald-900 antialiased ms">
+
+    <nav class="bg-emerald-700 text-white shadow-md sticky top-0 z-50 no-print">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="font-bold text-xl tracking-tight">
+                <span data-lang="ms">Pemodelan Matematik (Langkah demi Langkah)</span>
+                <span data-lang="en">Math Modelling (Step-by-Step)</span>
+            </h1>
+            <button onclick="toggleLang()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded text-sm font-semibold border border-emerald-400 transition-colors">
+                <span data-lang="ms">🇲🇾 BM / 🇬🇧 EN</span>
+                <span data-lang="en">🇬🇧 EN / 🇲🇾 BM</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        
+        <!-- PENGENALAN (INTRODUCTION) -->
+        <div class="mb-6 bg-white p-6 rounded-xl shadow-md border border-emerald-200 no-print">
+            <h2 class="font-bold text-2xl text-emerald-800 mb-4 border-b pb-2">
+                <span data-lang="ms">Pengenalan: Terjemahan Persamaan ke Gambar Rajah Blok</span>
+                <span data-lang="en">Introduction: Translating Equations to Block Diagrams</span>
+            </h2>
+            <div class="space-y-4 text-emerald-900">
+                <p>
+                    <span data-lang="ms">Dalam kejuruteraan kawalan, sistem dinamik sering diwakili oleh set persamaan algebra dalam domain-<em>s</em>. Persamaan ini boleh divisualisasikan menggunakan <strong>Gambar Rajah Blok</strong> melalui tiga elemen asas:</span>
+                    <span data-lang="en">In control engineering, dynamic systems are often represented by algebraic equations in the <em>s</em>-domain. These equations can be visualized using <strong>Block Diagrams</strong> through three basic elements:</span>
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-emerald-50 p-4 rounded border border-emerald-100">
+                        <div class="font-bold text-lg mb-2 flex items-center">
+                            <span class="bg-emerald-200 text-emerald-800 rounded-full w-6 h-6 inline-flex items-center justify-center mr-2 text-sm">1</span> 
+                            <span data-lang="ms">Simpang Penjumlah</span><span data-lang="en">Summing Junction</span>
+                        </div>
+                        <p class="text-sm"><span data-lang="ms">Mewakili operasi tambah (+) atau tolak (-). Cth: <code>X = A - B</code> akan mempunyai simpang bulat dengan A(+) dan B(-).</span><span data-lang="en">Represents addition (+) or subtraction (-). Ex: <code>X = A - B</code> will have a circular junction with A(+) and B(-).</span></p>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded border border-emerald-100">
+                        <div class="font-bold text-lg mb-2 flex items-center">
+                            <span class="bg-emerald-200 text-emerald-800 rounded-full w-6 h-6 inline-flex items-center justify-center mr-2 text-sm">2</span> 
+                            <span data-lang="ms">Blok Sistem</span><span data-lang="en">System Block</span>
+                        </div>
+                        <p class="text-sm"><span data-lang="ms">Mewakili pendaraban isyarat dengan Rangkap Pindah (Transfer Function). Cth: <code>Y = G(s)X</code>. Isyarat X masuk ke blok G, lalu Y keluar.</span><span data-lang="en">Represents signal multiplication by a Transfer Function. Ex: <code>Y = G(s)X</code>. Signal X enters block G, Y exits.</span></p>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded border border-emerald-100">
+                        <div class="font-bold text-lg mb-2 flex items-center">
+                            <span class="bg-emerald-200 text-emerald-800 rounded-full w-6 h-6 inline-flex items-center justify-center mr-2 text-sm">3</span> 
+                            <span data-lang="ms">Titik Ambilan</span><span data-lang="en">Takeoff Point</span>
+                        </div>
+                        <p class="text-sm"><span data-lang="ms">Menyebarkan/mengagihkan isyarat yang sama ke berbilang laluan (biasanya digunakan untuk laluan suap balik / feedback).</span><span data-lang="en">Distributes the identical signal to multiple paths (commonly used for feedback loops).</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4 bg-white p-4 rounded-lg shadow-sm border border-emerald-200 no-print">
+            <p class="text-emerald-800">
+                <span data-lang="ms"><strong>Latihan Berpandu:</strong> Selesaikan persamaan matematik di bawah secara teori. Selepas siap, buka kunci jawapan untuk melihat animasi langkah-demi-langkah.</span>
+                <span data-lang="en"><strong>Guided Practice:</strong> Solve the mathematical equations below theoretically. Once done, unlock the answers to view the step-by-step animation.</span>
+            </p>
+        </div>
+
+        <!-- PASSWORD UNLOCK SECTION -->
+        <div id="unlock-container" class="mb-8 bg-emerald-100 p-6 rounded-lg shadow-sm border border-emerald-300 no-print flex flex-col items-center justify-center text-center">
+            <h3 class="font-bold text-lg text-emerald-800 mb-2">
+                <span data-lang="ms">🔒 Kunci Jawapan Aktif</span>
+                <span data-lang="en">🔒 Answers Locked</span>
+            </h3>
+            <p class="text-sm text-emerald-700 mb-4 max-w-lg mx-auto">
+                <span data-lang="ms">Sila cuba jawab sendiri terlebih dahulu. Masukkan kata laluan yang diberikan oleh pensyarah untuk mendedahkan butang jawapan.</span>
+                <span data-lang="en">Please try answering yourself first. Enter the password provided by the lecturer to reveal the answer buttons.</span>
+            </p>
+            <div class="flex flex-col sm:flex-row items-center gap-2">
+                <input type="password" id="ans-password" class="border border-emerald-400 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-600" placeholder="Password...">
+                <button onclick="checkPassword()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2 rounded font-semibold transition-colors mt-2 sm:mt-0">
+                    <span data-lang="ms">Buka Kunci Jawapan</span>
+                    <span data-lang="en">Unlock Answers</span>
+                </button>
+            </div>
+            <p id="pwd-error" class="text-red-600 font-semibold text-sm mt-3 hidden">
+                <span data-lang="ms">❌ Kata laluan salah. Sila cuba lagi.</span>
+                <span data-lang="en">❌ Incorrect password. Please try again.</span>
+            </p>
+        </div>
+
+        <div class="space-y-8 no-print">
+            
+            <!-- Soalan 1 -->
+            <div class="bg-white rounded-xl shadow-md border border-emerald-100 overflow-hidden">
+                <div class="p-6">
+                    <h3 class="font-bold text-lg text-emerald-800 mb-3 flex items-center justify-between">
+                        <span><span data-lang="ms">Soalan 1</span><span data-lang="en">Question 1</span></span>
+                        <span class="text-xs font-normal bg-green-100 text-green-800 py-1 px-3 rounded-full"><span data-lang="ms">Mudah</span><span data-lang="en">Easy</span></span>
+                    </h3>
+                    <div class="math-eq">E(s) = R(s) - H<sub>1</sub>(s)C(s)</div>
+                    <div class="math-eq">C(s) = G<sub>1</sub>(s)E(s)</div>
+                    
+                    <button onclick="toggleAnswer('ans1', this)" class="ans-toggle-btn hidden mt-4 w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold py-2 rounded-lg transition-colors border border-emerald-300">
+                        <span data-lang="ms">👁️ Papar / Sembunyi Jawapan Langkah-demi-Langkah</span>
+                        <span data-lang="en">👁️ Show / Hide Step-by-Step Answer</span>
+                    </button>
+                </div>
+                
+                <div id="ans1" class="answer-panel bg-emerald-50 border-t border-emerald-100">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4 bg-white p-2 rounded shadow-sm border border-emerald-200">
+                            <button id="btn-prev-q1" onclick="changeStep('q1', -1)" class="px-4 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 opacity-50 cursor-not-allowed" disabled><span data-lang="ms">⬅️ Sebelumnya</span><span data-lang="en">⬅️ Prev</span></button>
+                            <div class="font-bold text-emerald-700"><span data-lang="ms">Langkah <span id="counter-q1">1</span> / 3</span><span data-lang="en">Step <span id="counter-q1-en">1</span> / 3</span></div>
+                            <button id="btn-next-q1" onclick="changeStep('q1', 1)" class="px-4 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-500"><span data-lang="ms">Seterusnya ➡️</span><span data-lang="en">Next ➡️</span></button>
+                        </div>
+                        
+                        <div class="h-16 mb-2 text-sm text-emerald-900 bg-emerald-100 p-3 rounded border border-emerald-200 flex items-center">
+                            <div id="desc-q1-1" class="desc-q1 w-full"><span data-lang="ms"><strong>Persamaan 1:</strong> E(s) = R(s) - H₁(s)C(s). Mulakan dengan Simpang Penjumlah. Lukis input R(s) dan isyarat perantaraan E(s). Abaikan H₁ dahulu.</span><span data-lang="en"><strong>Equation 1:</strong> E(s) = R(s) - H₁(s)C(s). Start with the Summing Junction. Draw input R(s) and intermediate signal E(s). Ignore H₁ for now.</span></div>
+                            <div id="desc-q1-2" class="desc-q1 w-full hidden"><span data-lang="ms"><strong>Persamaan 2:</strong> C(s) = G₁(s)E(s). Masukkan isyarat E(s) ke dalam blok G₁(s) untuk menghasilkan output C(s).</span><span data-lang="en"><strong>Equation 2:</strong> C(s) = G₁(s)E(s). Feed signal E(s) into block G₁(s) to produce output C(s).</span></div>
+                            <div id="desc-q1-3" class="desc-q1 w-full hidden"><span data-lang="ms"><strong>Lengkapkan Suap Balik (Feedback):</strong> Ambil isyarat C(s), lalui blok H₁(s), dan sambung ke Simpang Penjumlah dengan tanda negatif (-).</span><span data-lang="en"><strong>Complete Feedback:</strong> Take signal C(s), pass it through block H₁(s), and connect to the Summing Junction with a negative (-) sign.</span></div>
+                        </div>
+
+                        <div class="overflow-x-auto w-full flex justify-center bg-white p-4 rounded-lg border border-emerald-100">
+                            <svg width="400" height="150" viewBox="0 0 400 150">
+                                <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#065f46" /></marker></defs>
+                                <g class="svg-part svg-q1" data-step="1">
+                                    <line x1="20" y1="50" x2="80" y2="50" class="signal-line" marker-end="url(#arrow)" /><text x="30" y="40" class="svg-text-math">R(s)</text>
+                                    <circle cx="95" cy="50" r="15" class="sum-circle" /><text x="80" y="40" class="svg-text text-xs">+</text>
+                                    <line x1="110" y1="50" x2="180" y2="50" class="signal-line" marker-end="url(#arrow)" /><text x="135" y="40" class="svg-text-math">E(s)</text>
+                                </g>
+                                <g class="svg-part svg-q1 opacity-0" data-step="2">
+                                    <rect x="180" y="30" width="60" height="40" class="block-rect" /><text x="210" y="55" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                    <line x1="240" y1="50" x2="350" y2="50" class="signal-line" marker-end="url(#arrow)" /><text x="310" y="40" class="svg-text-math">C(s)</text>
+                                </g>
+                                <g class="svg-part svg-q1 opacity-0" data-step="3">
+                                    <text x="100" y="75" class="svg-text text-xs">-</text>
+                                    <circle cx="280" cy="50" r="3" fill="#064e3b" />
+                                    <line x1="280" y1="50" x2="280" y2="120" class="signal-line" /><line x1="280" y1="120" x2="240" y2="120" class="signal-line" marker-end="url(#arrow)" />
+                                    <rect x="180" y="100" width="60" height="40" class="block-rect" /><text x="210" y="125" text-anchor="middle" class="svg-text-math">H<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                    <line x1="180" y1="120" x2="95" y2="120" class="signal-line" /><line x1="95" y1="120" x2="95" y2="75" class="signal-line" marker-end="url(#arrow)" />
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Soalan 2 -->
+            <div class="bg-white rounded-xl shadow-md border border-emerald-100 overflow-hidden">
+                <div class="p-6">
+                    <h3 class="font-bold text-lg text-emerald-800 mb-3 flex items-center justify-between">
+                        <span><span data-lang="ms">Soalan 2</span><span data-lang="en">Question 2</span></span>
+                        <span class="text-xs font-normal bg-yellow-100 text-yellow-800 py-1 px-3 rounded-full"><span data-lang="ms">Sederhana</span><span data-lang="en">Medium</span></span>
+                    </h3>
+                    <div class="math-eq">X(s) = R(s) - C(s)</div>
+                    <div class="math-eq">Y(s) = G<sub>1</sub>(s)X(s)</div>
+                    <div class="math-eq">C(s) = G<sub>2</sub>(s)Y(s)</div>
+                    
+                    <button onclick="toggleAnswer('ans2', this)" class="ans-toggle-btn hidden mt-4 w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold py-2 rounded-lg transition-colors border border-emerald-300">
+                        <span data-lang="ms">👁️ Papar / Sembunyi Jawapan Langkah-demi-Langkah</span>
+                        <span data-lang="en">👁️ Show / Hide Step-by-Step Answer</span>
+                    </button>
+                </div>
+                
+                <div id="ans2" class="answer-panel bg-emerald-50 border-t border-emerald-100">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4 bg-white p-2 rounded shadow-sm border border-emerald-200">
+                            <button id="btn-prev-q2" onclick="changeStep('q2', -1)" class="px-4 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 opacity-50 cursor-not-allowed" disabled><span data-lang="ms">⬅️ Sebelumnya</span><span data-lang="en">⬅️ Prev</span></button>
+                            <div class="font-bold text-emerald-700"><span data-lang="ms">Langkah <span id="counter-q2">1</span> / 4</span><span data-lang="en">Step <span id="counter-q2-en">1</span> / 4</span></div>
+                            <button id="btn-next-q2" onclick="changeStep('q2', 1)" class="px-4 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-500"><span data-lang="ms">Seterusnya ➡️</span><span data-lang="en">Next ➡️</span></button>
+                        </div>
+                        
+                        <div class="h-16 mb-2 text-sm text-emerald-900 bg-emerald-100 p-3 rounded border border-emerald-200 flex items-center">
+                            <div id="desc-q2-1" class="desc-q2 w-full"><span data-lang="ms"><strong>Persamaan 1:</strong> X(s) = R(s) - C(s). Lukis R(s) masuk ke Simpang Penjumlah untuk menghasilkan X(s).</span><span data-lang="en"><strong>Equation 1:</strong> X(s) = R(s) - C(s). Draw R(s) into a Summing Junction to produce X(s).</span></div>
+                            <div id="desc-q2-2" class="desc-q2 w-full hidden"><span data-lang="ms"><strong>Persamaan 2:</strong> Y(s) = G₁(s)X(s). Isyarat X(s) melalui blok G₁ menjadi isyarat Y(s).</span><span data-lang="en"><strong>Equation 2:</strong> Y(s) = G₁(s)X(s). Signal X(s) passes through block G₁ to become Y(s).</span></div>
+                            <div id="desc-q2-3" class="desc-q2 w-full hidden"><span data-lang="ms"><strong>Persamaan 3:</strong> C(s) = G₂(s)Y(s). Isyarat Y(s) melalui blok G₂ menjadi isyarat output akhir C(s).</span><span data-lang="en"><strong>Equation 3:</strong> C(s) = G₂(s)Y(s). Signal Y(s) passes through block G₂ to become final output C(s).</span></div>
+                            <div id="desc-q2-4" class="desc-q2 w-full hidden"><span data-lang="ms"><strong>Lengkapkan Suap Balik:</strong> Ambil C(s) terus ke Simpang Penjumlah dengan tanda (-). Ini dipanggil 'Unity Feedback'.</span><span data-lang="en"><strong>Complete Feedback:</strong> Route C(s) directly to the Junction with a (-) sign. This is Unity Feedback.</span></div>
+                        </div>
+
+                        <div class="overflow-x-auto w-full flex justify-center bg-white p-4 rounded-lg border border-emerald-100">
+                            <svg width="450" height="150" viewBox="0 0 450 150">
+                                <g class="svg-part svg-q2" data-step="1">
+                                    <line x1="10" y1="50" x2="60" y2="50" class="signal-line" marker-end="url(#arrow)" /><text x="20" y="40" class="svg-text-math">R(s)</text>
+                                    <circle cx="75" cy="50" r="15" class="sum-circle" /><text x="60" y="40" class="svg-text text-xs">+</text>
+                                    <line x1="90" y1="50" x2="140" y2="50" class="signal-line" marker-end="url(#arrow)" /><text x="105" y="40" class="svg-text-math">X(s)</text>
+                                </g>
+                                <g class="svg-part svg-q2 opacity-0" data-step="2">
+                                    <rect x="140" y="30" width="60" height="40" class="block-rect" /><text x="170" y="55" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                    <line x1="200" y1="50" x2="260" y2="50" class="signal-line" marker-end="url(#arrow)" /><text x="220" y="40" class="svg-text-math">Y(s)</text>
+                                </g>
+                                <g class="svg-part svg-q2 opacity-0" data-step="3">
+                                    <rect x="260" y="30" width="60" height="40" class="block-rect" /><text x="290" y="55" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">2</tspan>(s)</text>
+                                    <line x1="320" y1="50" x2="420" y2="50" class="signal-line" marker-end="url(#arrow)" /><text x="380" y="40" class="svg-text-math">C(s)</text>
+                                </g>
+                                <g class="svg-part svg-q2 opacity-0" data-step="4">
+                                    <text x="80" y="75" class="svg-text text-xs">-</text>
+                                    <circle cx="360" cy="50" r="3" fill="#064e3b" /><line x1="360" y1="50" x2="360" y2="120" class="signal-line" /><line x1="360" y1="120" x2="75" y2="120" class="signal-line" /><line x1="75" y1="120" x2="75" y2="75" class="signal-line" marker-end="url(#arrow)" />
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Soalan 3 -->
+            <div class="bg-white rounded-xl shadow-md border border-emerald-100 overflow-hidden">
+                <div class="p-6">
+                    <h3 class="font-bold text-lg text-emerald-800 mb-3 flex items-center justify-between">
+                        <span><span data-lang="ms">Soalan 3</span><span data-lang="en">Question 3</span></span>
+                        <span class="text-xs font-normal bg-yellow-100 text-yellow-800 py-1 px-3 rounded-full"><span data-lang="ms">Sederhana (Gangguan)</span><span data-lang="en">Medium (Disturbance)</span></span>
+                    </h3>
+                    <div class="math-eq">E(s) = R(s) - H<sub>1</sub>(s)C(s)</div>
+                    <div class="math-eq">X(s) = G<sub>1</sub>(s)E(s) + D(s)</div>
+                    <div class="math-eq">C(s) = G<sub>2</sub>(s)X(s)</div>
+                    
+                    <button onclick="toggleAnswer('ans3', this)" class="ans-toggle-btn hidden mt-4 w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold py-2 rounded-lg transition-colors border border-emerald-300">
+                        <span data-lang="ms">👁️ Papar / Sembunyi Jawapan Langkah-demi-Langkah</span>
+                        <span data-lang="en">👁️ Show / Hide Step-by-Step Answer</span>
+                    </button>
+                </div>
+                
+                <div id="ans3" class="answer-panel bg-emerald-50 border-t border-emerald-100">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4 bg-white p-2 rounded shadow-sm border border-emerald-200">
+                            <button id="btn-prev-q3" onclick="changeStep('q3', -1)" class="px-4 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 opacity-50 cursor-not-allowed" disabled><span data-lang="ms">⬅️ Sebelumnya</span><span data-lang="en">⬅️ Prev</span></button>
+                            <div class="font-bold text-emerald-700"><span data-lang="ms">Langkah <span id="counter-q3">1</span> / 4</span><span data-lang="en">Step <span id="counter-q3-en">1</span> / 4</span></div>
+                            <button id="btn-next-q3" onclick="changeStep('q3', 1)" class="px-4 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-500"><span data-lang="ms">Seterusnya ➡️</span><span data-lang="en">Next ➡️</span></button>
+                        </div>
+                        
+                        <div class="h-16 mb-2 text-sm text-emerald-900 bg-emerald-100 p-3 rounded border border-emerald-200 flex items-center">
+                            <div id="desc-q3-1" class="desc-q3 w-full"><span data-lang="ms"><strong>Persamaan 1:</strong> E(s) = R(s) - H₁(s)C(s). Lukis Simpang 1 dengan input R(s) dan isyarat E(s).</span><span data-lang="en"><strong>Equation 1:</strong> E(s) = R(s) - H₁(s)C(s). Draw Junction 1 with R(s) input and E(s) signal.</span></div>
+                            <div id="desc-q3-2" class="desc-q3 w-full hidden"><span data-lang="ms"><strong>Persamaan 2:</strong> X(s) = G₁(s)E(s) + D(s). Lukis blok G₁, kemudian tambah Simpang 2 untuk memasukkan gangguan D(s) dengan tanda (+). Outputnya ialah X(s).</span><span data-lang="en"><strong>Equation 2:</strong> X(s) = G₁(s)E(s) + D(s). Add G₁, then Junction 2 to insert disturbance D(s) (+). Output is X(s).</span></div>
+                            <div id="desc-q3-3" class="desc-q3 w-full hidden"><span data-lang="ms"><strong>Persamaan 3:</strong> C(s) = G₂(s)X(s). Isyarat X(s) melalui blok G₂ menjadi output C(s).</span><span data-lang="en"><strong>Equation 3:</strong> C(s) = G₂(s)X(s). Signal X(s) passes block G₂ to become C(s).</span></div>
+                            <div id="desc-q3-4" class="desc-q3 w-full hidden"><span data-lang="ms"><strong>Lengkapkan Suap Balik:</strong> Ambil C(s) lalu blok H₁ dan masuk ke Simpang 1 dengan tanda (-).</span><span data-lang="en"><strong>Complete Feedback:</strong> Route C(s) through H₁ into Junction 1 with a (-) sign.</span></div>
+                        </div>
+
+                        <div class="overflow-x-auto w-full flex justify-center bg-white p-4 rounded-lg border border-emerald-100">
+                            <svg width="550" height="180" viewBox="0 0 550 180">
+                                <g class="svg-part svg-q3" data-step="1">
+                                    <line x1="10" y1="90" x2="60" y2="90" class="signal-line" marker-end="url(#arrow)" /><text x="20" y="80" class="svg-text-math">R(s)</text>
+                                    <circle cx="75" cy="90" r="15" class="sum-circle" /><text x="60" y="80" class="svg-text text-xs">+</text>
+                                    <line x1="90" y1="90" x2="140" y2="90" class="signal-line" marker-end="url(#arrow)" /><text x="105" y="80" class="svg-text-math">E(s)</text>
+                                </g>
+                                <g class="svg-part svg-q3 opacity-0" data-step="2">
+                                    <rect x="140" y="70" width="60" height="40" class="block-rect" /><text x="170" y="95" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                    <line x1="200" y1="90" x2="260" y2="90" class="signal-line" marker-end="url(#arrow)" />
+                                    <circle cx="275" cy="90" r="15" class="sum-circle" /><text x="260" y="80" class="svg-text text-xs">+</text><text x="280" y="75" class="svg-text text-xs">+</text>
+                                    <line x1="275" y1="20" x2="275" y2="65" class="signal-line" marker-end="url(#arrow)" /><text x="285" y="30" class="svg-text-math">D(s)</text>
+                                    <line x1="290" y1="90" x2="350" y2="90" class="signal-line" marker-end="url(#arrow)" /><text x="310" y="80" class="svg-text-math">X(s)</text>
+                                </g>
+                                <g class="svg-part svg-q3 opacity-0" data-step="3">
+                                    <rect x="350" y="70" width="60" height="40" class="block-rect" /><text x="380" y="95" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">2</tspan>(s)</text>
+                                    <line x1="410" y1="90" x2="520" y2="90" class="signal-line" marker-end="url(#arrow)" /><text x="470" y="80" class="svg-text-math">C(s)</text>
+                                </g>
+                                <g class="svg-part svg-q3 opacity-0" data-step="4">
+                                    <text x="80" y="115" class="svg-text text-xs">-</text>
+                                    <circle cx="450" cy="90" r="3" fill="#064e3b" /><line x1="450" y1="90" x2="450" y2="150" class="signal-line" /><line x1="450" y1="150" x2="280" y2="150" class="signal-line" marker-end="url(#arrow)" />
+                                    <rect x="220" y="130" width="60" height="40" class="block-rect" /><text x="250" y="155" text-anchor="middle" class="svg-text-math">H<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                    <line x1="220" y1="150" x2="75" y2="150" class="signal-line" /><line x1="75" y1="150" x2="75" y2="115" class="signal-line" marker-end="url(#arrow)" />
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Soalan 4 -->
+            <div class="bg-white rounded-xl shadow-md border border-emerald-100 overflow-hidden">
+                <div class="p-6">
+                    <h3 class="font-bold text-lg text-emerald-800 mb-3 flex items-center justify-between">
+                        <span><span data-lang="ms">Soalan 4</span><span data-lang="en">Question 4</span></span>
+                        <span class="text-xs font-normal bg-orange-100 text-orange-800 py-1 px-3 rounded-full"><span data-lang="ms">Sukar (Laluan Selari)</span><span data-lang="en">Hard (Parallel)</span></span>
+                    </h3>
+                    <div class="math-eq">X<sub>1</sub>(s) = R(s) - H<sub>1</sub>(s)C(s)</div>
+                    <div class="math-eq">X<sub>2</sub>(s) = G<sub>1</sub>(s)X<sub>1</sub>(s)</div>
+                    <div class="math-eq">X<sub>3</sub>(s) = G<sub>2</sub>(s)X<sub>1</sub>(s)</div>
+                    <div class="math-eq">C(s) = X<sub>2</sub>(s) + X<sub>3</sub>(s)</div>
+                    
+                    <button onclick="toggleAnswer('ans4', this)" class="ans-toggle-btn hidden mt-4 w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold py-2 rounded-lg transition-colors border border-emerald-300">
+                        <span data-lang="ms">👁️ Papar / Sembunyi Jawapan Langkah-demi-Langkah</span>
+                        <span data-lang="en">👁️ Show / Hide Step-by-Step Answer</span>
+                    </button>
+                </div>
+                
+                <div id="ans4" class="answer-panel bg-emerald-50 border-t border-emerald-100">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4 bg-white p-2 rounded shadow-sm border border-emerald-200">
+                            <button id="btn-prev-q4" onclick="changeStep('q4', -1)" class="px-4 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 opacity-50 cursor-not-allowed" disabled><span data-lang="ms">⬅️ Sebelumnya</span><span data-lang="en">⬅️ Prev</span></button>
+                            <div class="font-bold text-emerald-700"><span data-lang="ms">Langkah <span id="counter-q4">1</span> / 4</span><span data-lang="en">Step <span id="counter-q4-en">1</span> / 4</span></div>
+                            <button id="btn-next-q4" onclick="changeStep('q4', 1)" class="px-4 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-500"><span data-lang="ms">Seterusnya ➡️</span><span data-lang="en">Next ➡️</span></button>
+                        </div>
+                        
+                        <div class="h-16 mb-2 text-sm text-emerald-900 bg-emerald-100 p-3 rounded border border-emerald-200 flex items-center">
+                            <div id="desc-q4-1" class="desc-q4 w-full"><span data-lang="ms"><strong>Persamaan 1:</strong> X₁(s) = R(s) - H₁(s)C(s). Lukis Simpang Penjumlah awal dengan isyarat keluaran X₁(s).</span><span data-lang="en"><strong>Equation 1:</strong> X₁(s) = R(s) - H₁(s)C(s). Draw initial Junction with output signal X₁(s).</span></div>
+                            <div id="desc-q4-2" class="desc-q4 w-full hidden"><span data-lang="ms"><strong>Persamaan 2 & 3:</strong> Isyarat X₁(s) dipecahkan kepada dua laluan selari (atas: G₁, bawah: G₂) untuk membentuk X₂(s) dan X₃(s).</span><span data-lang="en"><strong>Equations 2 & 3:</strong> Signal X₁(s) splits into two parallel paths (top: G₁, bottom: G₂) to form X₂(s) and X₃(s).</span></div>
+                            <div id="desc-q4-3" class="desc-q4 w-full hidden"><span data-lang="ms"><strong>Persamaan 4:</strong> C(s) = X₂(s) + X₃(s). Gabungkan laluan X₂ dan X₃ ke dalam Simpang Penjumlah baru (+) untuk mendapat C(s).</span><span data-lang="en"><strong>Equation 4:</strong> C(s) = X₂(s) + X₃(s). Combine paths X₂ and X₃ into a new Summing Junction (+) to get C(s).</span></div>
+                            <div id="desc-q4-4" class="desc-q4 w-full hidden"><span data-lang="ms"><strong>Lengkapkan Suap Balik:</strong> Ambil C(s) melalui H₁ dan kembalikan ke Simpang Penjumlah pertama dengan tanda (-).</span><span data-lang="en"><strong>Complete Feedback:</strong> Take C(s) through H₁ back to the first Junction with a (-) sign.</span></div>
+                        </div>
+
+                        <div class="overflow-x-auto w-full flex justify-center bg-white p-4 rounded-lg border border-emerald-100">
+                            <svg width="450" height="220" viewBox="0 0 450 220">
+                                <g class="svg-part svg-q4" data-step="1">
+                                    <line x1="10" y1="90" x2="60" y2="90" class="signal-line" marker-end="url(#arrow)" /><text x="20" y="80" class="svg-text-math">R(s)</text>
+                                    <circle cx="75" cy="90" r="15" class="sum-circle" /><text x="60" y="80" class="svg-text text-xs">+</text>
+                                    <line x1="90" y1="90" x2="160" y2="90" class="signal-line" /><text x="110" y="80" class="svg-text-math">X<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                </g>
+                                <g class="svg-part svg-q4 opacity-0" data-step="2">
+                                    <circle cx="150" cy="90" r="3" fill="#064e3b" />
+                                    <!-- Top Path -->
+                                    <line x1="150" y1="90" x2="150" y2="40" class="signal-line" /><line x1="150" y1="40" x2="190" y2="40" class="signal-line" marker-end="url(#arrow)" />
+                                    <rect x="190" y="20" width="60" height="40" class="block-rect" /><text x="220" y="45" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                    <line x1="250" y1="40" x2="310" y2="40" class="signal-line" /><line x1="310" y1="40" x2="310" y2="75" class="signal-line" marker-end="url(#arrow)" /><text x="260" y="30" class="svg-text-math">X<tspan dy="5" font-size="12">2</tspan>(s)</text>
+                                    <!-- Bottom Path -->
+                                    <line x1="150" y1="90" x2="150" y2="140" class="signal-line" /><line x1="150" y1="140" x2="190" y2="140" class="signal-line" marker-end="url(#arrow)" />
+                                    <rect x="190" y="120" width="60" height="40" class="block-rect" /><text x="220" y="145" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">2</tspan>(s)</text>
+                                    <line x1="250" y1="140" x2="310" y2="140" class="signal-line" /><line x1="310" y1="140" x2="310" y2="105" class="signal-line" marker-end="url(#arrow)" /><text x="260" y="130" class="svg-text-math">X<tspan dy="5" font-size="12">3</tspan>(s)</text>
+                                </g>
+                                <g class="svg-part svg-q4 opacity-0" data-step="3">
+                                    <circle cx="310" cy="90" r="15" class="sum-circle" /><text x="295" y="80" class="svg-text text-xs">+</text><text x="295" y="110" class="svg-text text-xs">+</text>
+                                    <line x1="325" y1="90" x2="430" y2="90" class="signal-line" marker-end="url(#arrow)" /><text x="390" y="80" class="svg-text-math">C(s)</text>
+                                </g>
+                                <g class="svg-part svg-q4 opacity-0" data-step="4">
+                                    <text x="80" y="115" class="svg-text text-xs">-</text>
+                                    <circle cx="360" cy="90" r="3" fill="#064e3b" /><line x1="360" y1="90" x2="360" y2="190" class="signal-line" /><line x1="360" y1="190" x2="240" y2="190" class="signal-line" marker-end="url(#arrow)" />
+                                    <rect x="180" y="170" width="60" height="40" class="block-rect" /><text x="210" y="195" text-anchor="middle" class="svg-text-math">H<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                    <line x1="180" y1="190" x2="75" y2="190" class="signal-line" /><line x1="75" y1="190" x2="75" y2="115" class="signal-line" marker-end="url(#arrow)" />
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Soalan 5 -->
+            <div class="bg-white rounded-xl shadow-md border border-emerald-100 overflow-hidden">
+                <div class="p-6">
+                    <h3 class="font-bold text-lg text-emerald-800 mb-3 flex items-center justify-between">
+                        <span><span data-lang="ms">Soalan 5</span><span data-lang="en">Question 5</span></span>
+                        <span class="text-xs font-normal bg-red-100 text-red-800 py-1 px-3 rounded-full"><span data-lang="ms">Sangat Sukar (Gelung Berlapis)</span><span data-lang="en">Very Hard (Nested Loops)</span></span>
+                    </h3>
+                    <div class="math-eq">E<sub>1</sub>(s) = R(s) - H<sub>1</sub>(s)X<sub>2</sub>(s)</div>
+                    <div class="math-eq">X<sub>1</sub>(s) = G<sub>1</sub>(s)E<sub>1</sub>(s) - H<sub>2</sub>(s)C(s)</div>
+                    <div class="math-eq">X<sub>2</sub>(s) = G<sub>2</sub>(s)X<sub>1</sub>(s)</div>
+                    <div class="math-eq">C(s) = G<sub>3</sub>(s)X<sub>2</sub>(s)</div>
+                    
+                    <button onclick="toggleAnswer('ans5', this)" class="ans-toggle-btn hidden mt-4 w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold py-2 rounded-lg transition-colors border border-emerald-300">
+                        <span data-lang="ms">👁️ Papar / Sembunyi Jawapan Langkah-demi-Langkah</span>
+                        <span data-lang="en">👁️ Show / Hide Step-by-Step Answer</span>
+                    </button>
+                </div>
+                
+                <div id="ans5" class="answer-panel bg-emerald-50 border-t border-emerald-100">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4 bg-white p-2 rounded shadow-sm border border-emerald-200">
+                            <button id="btn-prev-q5" onclick="changeStep('q5', -1)" class="px-4 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 opacity-50 cursor-not-allowed" disabled><span data-lang="ms">⬅️ Sebelumnya</span><span data-lang="en">⬅️ Prev</span></button>
+                            <div class="font-bold text-emerald-700"><span data-lang="ms">Langkah <span id="counter-q5">1</span> / 5</span><span data-lang="en">Step <span id="counter-q5-en">1</span> / 5</span></div>
+                            <button id="btn-next-q5" onclick="changeStep('q5', 1)" class="px-4 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-500"><span data-lang="ms">Seterusnya ➡️</span><span data-lang="en">Next ➡️</span></button>
+                        </div>
+                        
+                        <div class="h-16 mb-2 text-sm text-emerald-900 bg-emerald-100 p-3 rounded border border-emerald-200 flex items-center">
+                            <div id="desc-q5-1" class="desc-q5 w-full"><span data-lang="ms"><strong>Persamaan 1:</strong> E₁(s) = R(s) - H₁(s)X₂(s). Bina Simpang 1 untuk menghasilkan E₁(s).</span><span data-lang="en"><strong>Equation 1:</strong> E₁(s) = R(s) - H₁(s)X₂(s). Build Junction 1 to produce E₁(s).</span></div>
+                            <div id="desc-q5-2" class="desc-q5 w-full hidden"><span data-lang="ms"><strong>Persamaan 2:</strong> X₁(s) = G₁(s)E₁(s) - H₂(s)C(s). Letakkan G₁ kemudian bina Simpang 2 untuk menghasilkan X₁(s).</span><span data-lang="en"><strong>Equation 2:</strong> X₁(s) = G₁(s)E₁(s) - H₂(s)C(s). Place G₁ then build Junction 2 to produce X₁(s).</span></div>
+                            <div id="desc-q5-3" class="desc-q5 w-full hidden"><span data-lang="ms"><strong>Persamaan 3 & 4:</strong> Letakkan G₂ untuk mendapat X₂(s). Letakkan G₃ selepasnya untuk mendapat C(s).</span><span data-lang="en"><strong>Equations 3 & 4:</strong> Place G₂ to get X₂(s). Place G₃ after it to get C(s).</span></div>
+                            <div id="desc-q5-4" class="desc-q5 w-full hidden"><span data-lang="ms"><strong>Suap Balik Dalaman (Inner Loop):</strong> Ambil C(s) melalui H₂ dan masuk ke Simpang 2 secara negatif untuk lengkapkan Persamaan 2.</span><span data-lang="en"><strong>Inner Feedback:</strong> Route C(s) through H₂ into Junction 2 negatively to complete Eq 2.</span></div>
+                            <div id="desc-q5-5" class="desc-q5 w-full hidden"><span data-lang="ms"><strong>Suap Balik Luaran (Outer Loop):</strong> Ambil isyarat di X₂(s) melalui H₁ dan masuk ke Simpang 1 secara negatif untuk lengkapkan Persamaan 1.</span><span data-lang="en"><strong>Outer Feedback:</strong> Route signal at X₂(s) through H₁ into Junction 1 negatively to complete Eq 1.</span></div>
+                        </div>
+
+                        <div class="overflow-x-auto w-full flex justify-center bg-white p-4 rounded-lg border border-emerald-100">
+                            <svg width="600" height="250" viewBox="0 0 600 250">
+                                <g class="svg-part svg-q5" data-step="1">
+                                    <line x1="10" y1="70" x2="50" y2="70" class="signal-line" marker-end="url(#arrow)" /><text x="20" y="60" class="svg-text-math">R(s)</text>
+                                    <circle cx="65" cy="70" r="15" class="sum-circle" /><text x="50" y="60" class="svg-text text-xs">+</text>
+                                    <line x1="80" y1="70" x2="130" y2="70" class="signal-line" marker-end="url(#arrow)" /><text x="95" y="60" class="svg-text-math">E<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                </g>
+                                <g class="svg-part svg-q5 opacity-0" data-step="2">
+                                    <rect x="130" y="50" width="50" height="40" class="block-rect" /><text x="155" y="75" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                    <line x1="180" y1="70" x2="220" y2="70" class="signal-line" marker-end="url(#arrow)" />
+                                    <circle cx="235" cy="70" r="15" class="sum-circle" /><text x="220" y="60" class="svg-text text-xs">+</text>
+                                    <line x1="250" y1="70" x2="300" y2="70" class="signal-line" marker-end="url(#arrow)" /><text x="265" y="60" class="svg-text-math">X<tspan dy="5" font-size="12">1</tspan>(s)</text>
+                                </g>
+                                <g class="svg-part svg-q5 opacity-0" data-step="3">
+                                    <rect x="300" y="50" width="50" height="40" class="block-rect" /><text x="325" y="75" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">2</tspan>(s)</text>
+                                    <line x1="350" y1="70" x2="430" y2="70" class="signal-line" marker-end="url(#arrow)" /><text x="380" y="60" class="svg-text-math">X<tspan dy="5" font-size="12">2</tspan>(s)</text>
+                                    <rect x="430" y="50" width="50" height="40" class="block-rect" /><text x="455" y="75" text-anchor="middle" class="svg-text-math">G<tspan dy="5" font-size="12">3</tspan>(s)</text>
+                                    <line x1="480" y1="70" x2="560" y2="70" class="signal-line" marker-end="url(#arrow)" /><text x="520" y="60" class="svg-text-math">C(s)</text>
+                                </g>
+                                <g class="svg-part svg-q5 opacity-0" data-step="4">
+                                    <text x="240" y="95" class="svg-text text-xs">-</text>
+                                    <circle cx="510" cy="70" r="3" fill="#064e3b" /><line x1="510" y1="70" x2="510" y2="130" class="signal-line" /><line x1="510" y1="130" x2="330" y2="130" class="signal-line" marker-end="url(#arrow)" />
+                                    <rect x="280" y="110" width="50" height="40" class="block-rect" /><text x="305" y="135" text-anchor="middle" class="svg-text-math">H<tspan dy="5" font-size="12">2</tspan>(s)</text><line x1="280" y1="130" x2="235" y2="130" class="signal-line" /><line x1="235" y1="130" x2="235" y2="95" class="signal-line" marker-end="url(#arrow)" />
+                                </g>
+                                <g class="svg-part svg-q5 opacity-0" data-step="5">
+                                    <text x="70" y="95" class="svg-text text-xs">-</text>
+                                    <circle cx="400" cy="70" r="3" fill="#064e3b" /><line x1="400" y1="70" x2="400" y2="200" class="signal-line" /><line x1="400" y1="200" x2="180" y2="200" class="signal-line" marker-end="url(#arrow)" />
+                                    <rect x="130" y="180" width="50" height="40" class="block-rect" /><text x="155" y="205" text-anchor="middle" class="svg-text-math">H<tspan dy="5" font-size="12">1</tspan>(s)</text><line x1="130" y1="200" x2="65" y2="200" class="signal-line" /><line x1="65" y1="200" x2="65" y2="95" class="signal-line" marker-end="url(#arrow)" />
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FINAL ASSESSMENT WORKSHEET SECTION -->
+        <div class="mt-12 bg-indigo-50 p-6 rounded-xl shadow-md border border-indigo-200 no-print flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h2 class="font-bold text-xl text-indigo-800 mb-1">
+                    <span data-lang="ms">📄 Penilaian Akhir (Muat Turun)</span>
+                    <span data-lang="en">📄 Final Assessment (Download)</span>
+                </h2>
+                <p class="text-sm text-indigo-600">
+                    <span data-lang="ms">Uji kefahaman anda. Muat turun set soalan BAHARU ini (jawapan tidak disediakan dalam sistem).</span>
+                    <span data-lang="en">Test your understanding. Download this NEW set of questions (answers are not provided in the system).</span>
+                </p>
+            </div>
+            <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-lg font-semibold shadow-md transition-colors flex items-center whitespace-nowrap">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span data-lang="ms">Muat Turun Penilaian</span>
+                <span data-lang="en">Download Assessment</span>
+            </button>
+        </div>
+
+        <!-- HIDDEN PRINTABLE WORKSHEET -->
+        <div id="printable-worksheet" style="display: none;" class="w-full text-black">
+            <div class="text-center mb-8 border-b-2 border-black pb-4">
+                <h1 class="text-2xl font-bold uppercase tracking-wide">Final Assessment - Block Diagram</h1>
+                <div class="mt-4 flex justify-between px-8">
+                    <p class="text-lg font-semibold text-gray-700">Name: <span class="border-b border-gray-400 inline-block w-64"></span></p>
+                    <p class="text-lg font-semibold text-gray-700">Date: <span class="border-b border-gray-400 inline-block w-32"></span></p>
+                </div>
+            </div>
+            
+            <div class="print-break">
+                <h3 class="font-bold text-xl mb-3">Question 1 (Basic Loop)</h3>
+                <div class="font-serif italic text-lg mb-1">E(s) = R(s) - C(s)</div>
+                <div class="font-serif italic text-lg mb-2">C(s) = G(s)E(s)</div>
+                <div class="print-space flex items-center justify-center text-gray-400 italic">Draw Block Diagram Here</div>
+            </div>
+
+            <div class="print-break">
+                <h3 class="font-bold text-xl mb-3">Question 2 (Cascade & Feedback)</h3>
+                <div class="font-serif italic text-lg mb-1">E(s) = R(s) - H(s)C(s)</div>
+                <div class="font-serif italic text-lg mb-1">X(s) = G<sub>1</sub>(s)E(s)</div>
+                <div class="font-serif italic text-lg mb-2">C(s) = G<sub>2</sub>(s)X(s)</div>
+                <div class="print-space flex items-center justify-center text-gray-400 italic">Draw Block Diagram Here</div>
+            </div>
+
+            <div class="print-break">
+                <h3 class="font-bold text-xl mb-3">Question 3 (Feedforward Paths)</h3>
+                <div class="font-serif italic text-lg mb-1">X<sub>1</sub>(s) = R(s) - C(s)</div>
+                <div class="font-serif italic text-lg mb-1">X<sub>2</sub>(s) = G<sub>1</sub>(s)X<sub>1</sub>(s) + G<sub>2</sub>(s)X<sub>1</sub>(s)</div>
+                <div class="font-serif italic text-lg mb-2">C(s) = G<sub>3</sub>(s)X<sub>2</sub>(s)</div>
+                <div class="print-space flex items-center justify-center text-gray-400 italic">Draw Block Diagram Here</div>
+            </div>
+
+            <div class="print-break">
+                <h3 class="font-bold text-xl mb-3">Question 4 (Inner & Outer Loops)</h3>
+                <div class="font-serif italic text-lg mb-1">E<sub>1</sub>(s) = R(s) - C(s)</div>
+                <div class="font-serif italic text-lg mb-1">E<sub>2</sub>(s) = G<sub>1</sub>(s)E<sub>1</sub>(s) - H<sub>1</sub>(s)X<sub>1</sub>(s)</div>
+                <div class="font-serif italic text-lg mb-1">X<sub>1</sub>(s) = G<sub>2</sub>(s)E<sub>2</sub>(s)</div>
+                <div class="font-serif italic text-lg mb-2">C(s) = G<sub>3</sub>(s)X<sub>1</sub>(s)</div>
+                <div class="print-space flex items-center justify-center text-gray-400 italic">Draw Block Diagram Here</div>
+            </div>
+
+            <div class="print-break">
+                <h3 class="font-bold text-xl mb-3">Question 5 (Multiple Feedback)</h3>
+                <div class="font-serif italic text-lg mb-1">X<sub>1</sub>(s) = R(s) - H<sub>1</sub>(s)X<sub>3</sub>(s)</div>
+                <div class="font-serif italic text-lg mb-1">X<sub>2</sub>(s) = G<sub>1</sub>(s)X<sub>1</sub>(s) - H<sub>2</sub>(s)X<sub>3</sub>(s)</div>
+                <div class="font-serif italic text-lg mb-1">X<sub>3</sub>(s) = G<sub>2</sub>(s)X<sub>2</sub>(s)</div>
+                <div class="font-serif italic text-lg mb-2">C(s) = G<sub>3</sub>(s)X<sub>3</sub>(s)</div>
+                <div class="print-space flex items-center justify-center text-gray-400 italic">Draw Block Diagram Here</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const stepState = {
+            q1: { current: 1, max: 3 },
+            q2: { current: 1, max: 4 },
+            q3: { current: 1, max: 4 },
+            q4: { current: 1, max: 4 },
+            q5: { current: 1, max: 5 }
+        };
+
+        function toggleLang() {
+            const body = document.body;
+            if (body.classList.contains('ms')) {
+                body.classList.remove('ms'); body.classList.add('en');
+            } else {
+                body.classList.remove('en'); body.classList.add('ms');
+            }
+        }
+
+        // --- NEW PASSWORD LOGIC ---
+        function checkPassword() {
+            const pwd = document.getElementById('ans-password').value;
+            if (pwd === '201026') {
+                document.getElementById('unlock-container').classList.add('hidden');
+                document.querySelectorAll('.ans-toggle-btn').forEach(btn => btn.classList.remove('hidden'));
+            } else {
+                document.getElementById('pwd-error').classList.remove('hidden');
+            }
+        }
+        // --------------------------
+
+        function toggleAnswer(id, btn) {
+            const panel = document.getElementById(id);
+            if (panel.classList.contains('open')) {
+                panel.classList.remove('open');
+                btn.classList.remove('bg-emerald-200');
+                btn.classList.add('bg-emerald-100');
+            } else {
+                panel.classList.add('open');
+                btn.classList.remove('bg-emerald-100');
+                btn.classList.add('bg-emerald-200');
+            }
+        }
+
+        function changeStep(q, delta) {
+            let state = stepState[q];
+            state.current += delta;
+            if (state.current < 1) state.current = 1;
+            if (state.current > state.max) state.current = state.max;
+
+            // Update Description Text Visibility
+            document.querySelectorAll(`.desc-${q}`).forEach(el => el.classList.add('hidden'));
+            document.getElementById(`desc-${q}-${state.current}`).classList.remove('hidden');
+
+            // Update SVG Visibility (Fade in/out)
+            document.querySelectorAll(`.svg-${q}`).forEach(el => {
+                let stepNum = parseInt(el.getAttribute('data-step'));
+                if (stepNum <= state.current) {
+                    el.classList.remove('opacity-0');
+                } else {
+                    el.classList.add('opacity-0');
+                }
+            });
+
+            // Update Counters
+            document.getElementById(`counter-${q}`).innerText = state.current;
+            document.getElementById(`counter-${q}-en`).innerText = state.current;
+
+            // Update Button States
+            let btnPrev = document.getElementById(`btn-prev-${q}`);
+            let btnNext = document.getElementById(`btn-next-${q}`);
+            
+            btnPrev.disabled = (state.current === 1);
+            btnNext.disabled = (state.current === state.max);
+
+            if(btnPrev.disabled) { btnPrev.classList.add('opacity-50', 'cursor-not-allowed'); } 
+            else { btnPrev.classList.remove('opacity-50', 'cursor-not-allowed'); }
+            
+            if(btnNext.disabled) { btnNext.classList.add('opacity-50', 'cursor-not-allowed'); } 
+            else { btnNext.classList.remove('opacity-50', 'cursor-not-allowed'); }
+        }
+    </script>
+</body>
+</html>
