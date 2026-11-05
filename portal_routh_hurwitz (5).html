@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Pelajar: Kriteria Routh-Hurwitz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: 600; }
+        .tab-inactive { color: #6b7280; font-weight: 500; }
+        .tab-inactive:hover { color: #374151; border-bottom: 2px solid #d1d5db; }
+        
+        /* Custom scrollbar for table */
+        .table-container::-webkit-scrollbar { height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .math-table td, .math-table th { padding: 0.5rem 1rem; border: 1px solid #e5e7eb; text-align: center; }
+        .math-table th { background-color: #f9fafb; font-weight: 600; }
+        .col-first { font-weight: 700; background-color: #eff6ff; color: #1e40af; }
+
+        /* Print Settings for Assessment */
+        @media print {
+            body { background-color: white; }
+            nav, .tab-active, .tab-inactive, footer, .print-hidden { display: none !important; }
+            #content-kuiz { display: block !important; width: 100%; max-width: 100%; }
+            .print-only { display: block !important; }
+            .shadow-sm, .shadow-lg { box-shadow: none !important; }
+            .border, .border-gray-100 { border-color: #000 !important; }
+            #content-teori, #content-kalkulator { display: none !important; }
+            .page-break { page-break-before: always; }
+            .working-space { height: 350px !important; border: 1px solid #d1d5db !important; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-700 text-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-wave-square text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">EduControl: Routh-Hurwitz</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="hidden md:block text-sm bg-blue-800 px-3 py-1 rounded-full border border-blue-600">
+                    <span data-lang="ms">Sistem Kawalan</span>
+                    <span data-lang="en" class="hidden">Control Systems</span>
+                </div>
+                <!-- Language Toggle Button -->
+                <button onclick="toggleLanguage()" class="bg-white/20 hover:bg-white/30 text-white font-bold py-1 px-3 rounded text-sm transition border border-white/40 shadow-sm flex items-center">
+                    <i class="fas fa-globe mr-2"></i>
+                    <span id="lang-toggle-text">EN</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
+        
+        <!-- Welcome Card -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-8 border border-gray-100">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+                <span data-lang="ms">Selamat Datang ke Portal Interaktif! 👋</span>
+                <span data-lang="en" class="hidden">Welcome to the Interactive Portal! 👋</span>
+            </h2>
+            <p class="text-gray-600">
+                <span data-lang="ms">Pelajari, fahami, dan uji pengetahuan anda tentang Kriteria Kestabilan Routh-Hurwitz melalui nota interaktif dan kalkulator pintar kami.</span>
+                <span data-lang="en" class="hidden">Learn, understand, and test your knowledge of the Routh-Hurwitz Stability Criterion through our interactive notes and smart calculator.</span>
+            </p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-200 mb-6 overflow-x-auto print-hidden">
+            <button onclick="switchTab('teori')" id="tab-teori" class="tab-active px-6 py-3 whitespace-nowrap focus:outline-none transition-colors duration-200">
+                <i class="fas fa-book-open mr-2"></i> 
+                <span data-lang="ms">Teori, Konsep & Contoh</span>
+                <span data-lang="en" class="hidden">Theory, Concepts & Examples</span>
+            </button>
+            <button onclick="switchTab('kalkulator')" id="tab-kalkulator" class="tab-inactive px-6 py-3 whitespace-nowrap focus:outline-none transition-colors duration-200">
+                <i class="fas fa-calculator mr-2"></i> 
+                <span data-lang="ms">Kalkulator Routh Array</span>
+                <span data-lang="en" class="hidden">Routh Array Calculator</span>
+            </button>
+            <button onclick="switchTab('kuiz')" id="tab-kuiz" class="tab-inactive px-6 py-3 whitespace-nowrap focus:outline-none transition-colors duration-200">
+                <i class="fas fa-file-alt mr-2"></i> 
+                <span data-lang="ms">Penilaian (Cetak)</span>
+                <span data-lang="en" class="hidden">Assessment (Print)</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: Teori -->
+        <div id="content-teori" class="block animate-fade-in">
+            <!-- Theory Top Section -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="md:col-span-2 space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-blue-700 mb-4">
+                            <span data-lang="ms">Apa itu Kriteria Routh-Hurwitz?</span>
+                            <span data-lang="en" class="hidden">What is the Routh-Hurwitz Criterion?</span>
+                        </h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            <span data-lang="ms">Kriteria Routh-Hurwitz adalah kaedah matematik yang digunakan dalam teori kawalan untuk menentukan sama ada sistem linear tidak berubah masa (LTI) adalah stabil atau tidak, <strong>tanpa perlu menyelesaikan punca (roots)</strong> persamaan cirinya.</span>
+                            <span data-lang="en" class="hidden">The Routh-Hurwitz criterion is a mathematical test used in control theory to determine whether a linear time-invariant (LTI) system is stable or not, <strong>without needing to solve for the roots</strong> of its characteristic equation.</span>
+                        </p>
+                        <p class="text-gray-700 leading-relaxed">
+                            <span data-lang="ms">Bentuk umum persamaan ciri:</span>
+                            <span data-lang="en" class="hidden">General form of the characteristic equation:</span>
+                            <br>
+                            <span class="block text-center my-4 p-4 bg-gray-50 rounded-lg font-mono text-sm border border-gray-200">
+                                \( a_n s^n + a_{n-1} s^{n-1} + ... + a_1 s + a_0 = 0 \)
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-blue-700 mb-4">
+                            <span data-lang="ms">Syarat Kestabilan</span>
+                            <span data-lang="en" class="hidden">Stability Conditions</span>
+                        </h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                                <span class="text-gray-700" data-lang="ms"><strong>Syarat Perlu:</strong> Semua pekali (\(a_n\) hingga \(a_0\)) mesti wujud dan mempunyai tanda yang sama (sama ada semua positif atau semua negatif).</span>
+                                <span class="text-gray-700 hidden" data-lang="en"><strong>Necessary Condition:</strong> All coefficients (\(a_n\) to \(a_0\)) must exist and have the same sign (either all positive or all negative).</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                                <span class="text-gray-700" data-lang="ms"><strong>Syarat Mencukupi:</strong> Semua nilai dalam <strong>lajur pertama</strong> Tatasusunan Routh (Routh Array) mesti mempunyai tanda yang sama (tiada perubahan tanda).</span>
+                                <span class="text-gray-700 hidden" data-lang="en"><strong>Sufficient Condition:</strong> All elements in the <strong>first column</strong> of the Routh Array must have the same sign (no sign changes).</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                        <h3 class="font-bold text-blue-800 mb-3"><i class="fas fa-info-circle mr-2"></i>
+                            <span data-lang="ms">Fakta Penting</span>
+                            <span data-lang="en" class="hidden">Important Fact</span>
+                        </h3>
+                        <p class="text-sm text-blue-900 mb-3">
+                            <span data-lang="ms"><strong>Perubahan Tanda:</strong> Bilangan pertukaran tanda dalam lajur pertama mewakili bilangan punca yang berada di <strong>Satah Separuh Kanan (Right Half-Plane, RHP)</strong>. Punca di RHP menyebabkan sistem tidak stabil.</span>
+                            <span data-lang="en" class="hidden"><strong>Sign Changes:</strong> The number of sign changes in the first column equals the number of roots in the <strong>Right Half-Plane (RHP)</strong>. Roots in the RHP indicate an unstable system.</span>
+                        </p>
+                    </div>
+
+                    <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-100">
+                        <h3 class="font-bold text-yellow-800 mb-3"><i class="fas fa-exclamation-triangle mr-2"></i>
+                            <span data-lang="ms">Kes Khas</span>
+                            <span data-lang="en" class="hidden">Special Cases</span>
+                        </h3>
+                        <ul class="space-y-4">
+                            <li class="text-sm text-yellow-900">
+                                <strong class="text-yellow-950">Case-I: Zero in the first column.</strong><br>
+                                <span data-lang="ms">Jika elemen pertama satu baris adalah sifar, bahagi dengan sifar akan berlaku. Ia digantikan dengan nombor positif yang sangat kecil (\( \epsilon \)).</span>
+                                <span data-lang="en" class="hidden">If the first element of a row is zero, division by zero occurs. It is replaced by a very small positive number (\( \epsilon \)).</span>
+                            </li>
+                            <li class="text-sm text-yellow-900">
+                                <strong class="text-yellow-950">Case-II: Entire Row is Zero.</strong><br>
+                                <span data-lang="ms">Keseluruhan baris sifar bermakna wujud polinomial genap. Bina <em>Persamaan Bantuan (Auxiliary Polynomial)</em>, lakukan pembezaan (differentiation), dan gantikan baris sifar.</span>
+                                <span data-lang="en" class="hidden">An entire row of zeros means an even polynomial is a factor. Form the <em>Auxiliary Polynomial</em>, differentiate it, and replace the row of zeros.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculation Examples Section -->
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4"><i class="fas fa-chalkboard-teacher text-blue-600 mr-2"></i> 
+                    <span data-lang="ms">Contoh Pengiraan Langkah-demi-Langkah</span>
+                    <span data-lang="en" class="hidden">Step-by-Step Calculation Examples</span>
+                </h3>
+                
+                <div class="space-y-10">
+                    <!-- Example 1: Normal Case -->
+                    <div>
+                        <h4 class="text-lg font-bold text-green-700 mb-3">
+                            <span data-lang="ms">1. Kes Biasa</span>
+                            <span data-lang="en" class="hidden">1. Normal Case</span>
+                        </h4>
+                        <p class="text-gray-700 mb-3">
+                            <span data-lang="ms">Diberi persamaan ciri:</span>
+                            <span data-lang="en" class="hidden">Given the characteristic equation:</span>
+                             \( s^3 + 6s^2 + 11s + 6 = 0 \)
+                        </p>
+                        <div class="overflow-x-auto">
+                            <table class="math-table w-full md:w-3/4 mb-4">
+                                <thead>
+                                    <tr>
+                                        <th><span data-lang="ms">Kuasa</span><span data-lang="en" class="hidden">Power</span></th>
+                                        <th><span data-lang="ms">Lajur 1</span><span data-lang="en" class="hidden">Column 1</span></th>
+                                        <th><span data-lang="ms">Lajur 2</span><span data-lang="en" class="hidden">Column 2</span></th>
+                                        <th><span data-lang="ms">Kiraan</span><span data-lang="en" class="hidden">Calculation</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>\( s^3 \)</td><td class="col-first">1</td><td>11</td><td>-</td></tr>
+                                    <tr><td>\( s^2 \)</td><td class="col-first">6</td><td>6</td><td>-</td></tr>
+                                    <tr><td>\( s^1 \)</td><td class="col-first">10</td><td>0</td><td>\( \frac{(6)(11) - (1)(6)}{6} = 10 \)</td></tr>
+                                    <tr><td>\( s^0 \)</td><td class="col-first">6</td><td>0</td><td>\( \frac{(10)(6) - (6)(0)}{10} = 6 \)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="bg-green-50 p-3 rounded text-sm text-green-800 border border-green-200">
+                            <span data-lang="ms"><strong>Kesimpulan:</strong> Lajur pertama adalah {1, 6, 10, 6}. Tiada pertukaran tanda (semua positif). Sistem adalah <strong>STABIL</strong>.</span>
+                            <span data-lang="en" class="hidden"><strong>Conclusion:</strong> First column is {1, 6, 10, 6}. No sign changes (all positive). System is <strong>STABLE</strong>.</span>
+                        </p>
+                    </div>
+
+                    <!-- Example 2: Case I -->
+                    <div>
+                        <h4 class="text-lg font-bold text-yellow-600 mb-3">
+                            <span data-lang="ms">2. Kes Khas I (Sifar di Lajur Pertama)</span>
+                            <span data-lang="en" class="hidden">2. Special Case I (Zero in First Column)</span>
+                        </h4>
+                        <p class="text-gray-700 mb-3">
+                            <span data-lang="ms">Diberi persamaan ciri:</span>
+                            <span data-lang="en" class="hidden">Given the characteristic equation:</span>
+                             \( s^4 + 2s^3 + 3s^2 + 6s + 5 = 0 \)
+                        </p>
+                        <div class="overflow-x-auto">
+                            <table class="math-table w-full mb-4">
+                                <thead>
+                                    <tr>
+                                        <th><span data-lang="ms">Kuasa</span><span data-lang="en" class="hidden">Power</span></th>
+                                        <th><span data-lang="ms">Lajur 1</span><span data-lang="en" class="hidden">Col 1</span></th>
+                                        <th><span data-lang="ms">Lajur 2</span><span data-lang="en" class="hidden">Col 2</span></th>
+                                        <th><span data-lang="ms">Lajur 3</span><span data-lang="en" class="hidden">Col 3</span></th>
+                                        <th>Nota</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>\( s^4 \)</td><td class="col-first">1</td><td>3</td><td>5</td><td>-</td></tr>
+                                    <tr><td>\( s^3 \)</td><td class="col-first">2</td><td>6</td><td>0</td><td>-</td></tr>
+                                    <tr><td>\( s^2 \)</td><td class="col-first">\( 0 \approx \epsilon \)</td><td>5</td><td>0</td>
+                                        <td>
+                                            <span data-lang="ms">\( \frac{(2)(3) - (1)(6)}{2} = 0 \). Ganti dengan \( \epsilon \)</span>
+                                            <span data-lang="en" class="hidden">\( \frac{(2)(3) - (1)(6)}{2} = 0 \). Replace with \( \epsilon \)</span>
+                                        </td>
+                                    </tr>
+                                    <tr><td>\( s^1 \)</td><td class="col-first">\( \frac{6\epsilon - 10}{\epsilon} \)</td><td>0</td><td>0</td>
+                                        <td>
+                                            <span data-lang="ms">Nilai ini adalah <strong>negatif</strong> (\(-\infty\)).</span>
+                                            <span data-lang="en" class="hidden">This value is <strong>negative</strong> (\(-\infty\)).</span>
+                                        </td>
+                                    </tr>
+                                    <tr><td>\( s^0 \)</td><td class="col-first">5</td><td>0</td><td>0</td><td>\( \frac{(\text{atas})(5) - (\epsilon)(0)}{\text{atas}} = 5 \)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="bg-red-50 p-3 rounded text-sm text-red-800 border border-red-200">
+                            <span data-lang="ms"><strong>Kesimpulan:</strong> Terdapat <strong>dua pertukaran tanda</strong> pada lajur pertama (+ ke -, - ke +). Sistem <strong>TIDAK STABIL</strong>.</span>
+                            <span data-lang="en" class="hidden"><strong>Conclusion:</strong> There are <strong>two sign changes</strong> in the first column (+ to -, - to +). System is <strong>UNSTABLE</strong>.</span>
+                        </p>
+                    </div>
+
+                    <!-- Example 3: Case II -->
+                    <div>
+                        <h4 class="text-lg font-bold text-purple-700 mb-3">
+                            <span data-lang="ms">3. Kes Khas II (Baris Sifar)</span>
+                            <span data-lang="en" class="hidden">3. Special Case II (Row of Zeros)</span>
+                        </h4>
+                        <p class="text-gray-700 mb-3">
+                            <span data-lang="ms">Diberi persamaan ciri:</span>
+                            <span data-lang="en" class="hidden">Given the characteristic equation:</span>
+                             \( s^3 + 2s^2 + 4s + 8 = 0 \)
+                        </p>
+                        <div class="overflow-x-auto">
+                            <table class="math-table w-full md:w-3/4 mb-4">
+                                <thead>
+                                    <tr>
+                                        <th><span data-lang="ms">Kuasa</span><span data-lang="en" class="hidden">Power</span></th>
+                                        <th><span data-lang="ms">Lajur 1</span><span data-lang="en" class="hidden">Col 1</span></th>
+                                        <th><span data-lang="ms">Lajur 2</span><span data-lang="en" class="hidden">Col 2</span></th>
+                                        <th>Nota</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>\( s^3 \)</td><td class="col-first">1</td><td>4</td><td>-</td></tr>
+                                    <tr><td>\( s^2 \)</td><td class="col-first">2</td><td>8</td>
+                                        <td>
+                                            <span data-lang="ms">Baris sebelum sifar. Bina \( A(s) \).</span>
+                                            <span data-lang="en" class="hidden">Row before zeros. Form \( A(s) \).</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="bg-gray-100">
+                                        <td colspan="4" class="text-left text-sm p-3">
+                                            <div data-lang="ms">
+                                                <strong>Langkah Khas:</strong> Kiraan asal \( s^1 \) menghasilkan Baris Sifar.<br>
+                                                1. Bina \( A(s) \) dari baris \( s^2 \): \( A(s) = 2s^2 + 8 \)<br>
+                                                2. Bezakan \( A(s) \): \( \frac{dA(s)}{ds} = 4s + 0 \)<br>
+                                                3. Ganti baris sifar dengan (4, 0).
+                                            </div>
+                                            <div data-lang="en" class="hidden">
+                                                <strong>Special Step:</strong> Original calculation for \( s^1 \) yields a Row of Zeros.<br>
+                                                1. Form \( A(s) \) from \( s^2 \) row: \( A(s) = 2s^2 + 8 \)<br>
+                                                2. Differentiate \( A(s) \): \( \frac{dA(s)}{ds} = 4s + 0 \)<br>
+                                                3. Replace zero row with (4, 0).
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr><td>\( s^1 \)</td><td class="col-first">4</td><td>0</td>
+                                        <td>
+                                            <span data-lang="ms">Pekali pembezaan \( A(s) \)</span>
+                                            <span data-lang="en" class="hidden">Coefficients from \( A(s) \) diff.</span>
+                                        </td>
+                                    </tr>
+                                    <tr><td>\( s^0 \)</td><td class="col-first">8</td><td>0</td><td>\( \frac{(4)(8) - (2)(0)}{4} = 8 \)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="bg-blue-50 p-3 rounded text-sm text-blue-800 border border-blue-200">
+                            <span data-lang="ms"><strong>Kesimpulan:</strong> Tiada pertukaran tanda, tetapi kewujudan baris sifar menunjukkan punca berada pada paksi bayangan. Sistem <strong>STABIL SECARA MARGINAL</strong>.</span>
+                            <span data-lang="en" class="hidden"><strong>Conclusion:</strong> No sign changes, but the row of zeros indicates roots on the imaginary axis. System is <strong>MARGINALLY STABLE</strong>.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Kalkulator -->
+        <div id="content-kalkulator" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">
+                            <span data-lang="ms">Kalkulator Tatasusunan Routh</span>
+                            <span data-lang="en" class="hidden">Routh Array Calculator</span>
+                        </h3>
+                        <p class="text-sm text-gray-500">
+                            <span data-lang="ms">Jana jadual Routh dan semak kestabilan sistem</span>
+                            <span data-lang="en" class="hidden">Generate Routh table and check system stability</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Input Section -->
+                    <div class="lg:col-span-1 border-r border-gray-100 lg:pr-8">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <span data-lang="ms">Darjah Persamaan (Order, n)</span>
+                            <span data-lang="en" class="hidden">Equation Degree (Order, n)</span>
+                        </label>
+                        <select id="degree" onchange="generateInputs()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-6">
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">
+                            <span data-lang="ms">Masukkan Pekali (Coefficients)</span>
+                            <span data-lang="en" class="hidden">Enter Coefficients</span>
+                        </label>
+                        <div id="input-container" class="space-y-3 mb-6">
+                            <!-- Inputs generated by JS -->
+                        </div>
+
+                        <button onclick="calculateRouth()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex justify-center items-center">
+                            <i class="fas fa-magic mr-2"></i> 
+                            <span data-lang="ms">Kira & Jana Jadual</span>
+                            <span data-lang="en" class="hidden">Calculate & Generate</span>
+                        </button>
+                    </div>
+
+                    <!-- Output Section -->
+                    <div class="lg:col-span-2">
+                        <div id="result-placeholder" class="h-full flex flex-col items-center justify-center text-gray-400 min-h-[300px]">
+                            <i class="fas fa-table text-5xl mb-4 text-gray-200"></i>
+                            <p data-lang="ms">Masukkan nilai dan klik kira untuk melihat hasil.</p>
+                            <p data-lang="en" class="hidden">Enter values and click calculate to view results.</p>
+                        </div>
+
+                        <div id="result-container" class="hidden">
+                            <!-- Characteristic Equation -->
+                            <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-center shadow-sm">
+                                <h4 class="text-sm font-bold text-blue-800 mb-2 uppercase tracking-wide">
+                                    <span data-lang="ms">Persamaan Ciri</span>
+                                    <span data-lang="en" class="hidden">Characteristic Equation</span>
+                                </h4>
+                                <p id="char-eq-display" class="font-mono text-xl font-semibold text-gray-800"></p>
+                            </div>
+
+                            <h4 class="text-lg font-bold text-gray-800 mb-4">
+                                <span data-lang="ms">Tatasusunan Routh (Routh Array)</span>
+                                <span data-lang="en" class="hidden">Routh Array Table</span>
+                            </h4>
+                            
+                            <div class="table-container overflow-x-auto bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
+                                <table class="w-full text-center border-collapse" id="routh-table">
+                                    <!-- Table generated by JS -->
+                                </table>
+                            </div>
+
+                            <h4 class="text-lg font-bold text-gray-800 mb-3">
+                                <span data-lang="ms">Analisis Kestabilan</span>
+                                <span data-lang="en" class="hidden">Stability Analysis</span>
+                            </h4>
+                            <div id="stability-alert" class="p-4 rounded-lg flex items-start border">
+                                <!-- Status generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Penilaian / Assesment (Boleh Dicetak) -->
+        <div id="content-kuiz" class="hidden">
+            <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                
+                <!-- Print Header Info -->
+                <div class="flex justify-between items-center mb-6 print-hidden">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800">
+                            <span data-lang="ms">Tugasan / Penilaian</span>
+                            <span data-lang="en" class="hidden">Assignment / Assessment</span>
+                        </h3>
+                        <p class="text-gray-600 text-sm mt-1">
+                            <span data-lang="ms">Sila cetak dokumen ini, lengkapkan jalan kira, dan hantar melalui Sistem Author.</span>
+                            <span data-lang="en" class="hidden">Please print this document, complete the calculations, and submit via the Author System.</span>
+                        </p>
+                    </div>
+                    <button onclick="window.print()" class="bg-gray-800 hover:bg-black text-white font-bold py-2 px-6 rounded-lg transition duration-200 shadow-sm flex items-center">
+                        <i class="fas fa-print mr-2"></i> 
+                        <span data-lang="ms">Cetak Tugasan</span>
+                        <span data-lang="en" class="hidden">Print Assignment</span>
+                    </button>
+                </div>
+
+                <!-- Assessment Content -->
+                <div class="border-b-2 border-black pb-4 mb-6 text-center">
+                    <h2 class="text-2xl font-bold uppercase tracking-wide">
+                        <span data-lang="ms">Penilaian: Kriteria Kestabilan Routh-Hurwitz</span>
+                        <span data-lang="en" class="hidden">Assessment: Routh-Hurwitz Stability Criterion</span>
+                    </h2>
+                    <p class="text-gray-700 mt-1">
+                        <span data-lang="ms">Modul Sistem Kawalan Lanjutan</span>
+                        <span data-lang="en" class="hidden">Advanced Control Systems Module</span>
+                    </p>
+                </div>
+
+                <!-- Student Info Form -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="flex flex-col">
+                        <label class="font-bold text-gray-700 text-sm mb-1">
+                            <span data-lang="ms">Nama Pelajar:</span>
+                            <span data-lang="en" class="hidden">Student Name:</span>
+                        </label>
+                        <div class="border-b border-gray-400 h-8"></div>
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="font-bold text-gray-700 text-sm mb-1">
+                            <span data-lang="ms">No. Matrik / ID:</span>
+                            <span data-lang="en" class="hidden">Student ID:</span>
+                        </label>
+                        <div class="border-b border-gray-400 h-8"></div>
+                    </div>
+                    <div class="flex flex-col md:col-span-2">
+                        <label class="font-bold text-gray-700 text-sm mb-1">
+                            <span data-lang="ms">Seksyen / Program:</span>
+                            <span data-lang="en" class="hidden">Section / Program:</span>
+                        </label>
+                        <div class="border-b border-gray-400 h-8"></div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-8 print-hidden">
+                    <span data-lang="ms"><strong>Arahan:</strong> Bagi setiap soalan di bawah, bina Tatasusunan Routh (Routh Array) dan tentukan kestabilan sistem. Nyatakan punca (jika ada) yang berada di satah separuh kanan (RHP).</span>
+                    <span data-lang="en" class="hidden"><strong>Instructions:</strong> For each question below, construct the Routh Array and determine the stability of the system. State the poles (if any) located in the right half-plane (RHP).</span>
+                </div>
+
+                <div class="space-y-8">
+                    
+                    <!-- Question 1 -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-bold text-gray-900 mb-2">
+                            <span data-lang="ms">Soalan 1 (Kes Biasa) - 10 Markah</span>
+                            <span data-lang="en" class="hidden">Question 1 (Normal Case) - 10 Marks</span>
+                        </h4>
+                        <p class="text-gray-800 mb-4">
+                            <span data-lang="ms">Diberi persamaan ciri sebuah sistem kawalan tertutup:</span>
+                            <span data-lang="en" class="hidden">Given the characteristic equation of a closed-loop control system:</span>
+                            <br><span class="font-mono text-lg font-semibold block mt-2 ml-4">\( P(s) = s^3 + 5s^2 + 8s + 4 = 0 \)</span>
+                        </p>
+                        <p class="text-sm text-gray-600 mb-2"><em>
+                            <span data-lang="ms">Tunjukkan jalan kira Tatasusunan Routh di dalam ruangan di bawah dan nyatakan status kestabilan.</span>
+                            <span data-lang="en" class="hidden">Show your Routh Array calculation in the space below and state the stability status.</span>
+                        </em></p>
+                        <div class="working-space h-64 border-2 border-dashed border-gray-300 rounded-lg w-full bg-gray-50/50"></div>
+                    </div>
+
+                    <!-- Question 2 -->
+                    <div class="page-break mt-12 pt-8 border-t border-dashed border-gray-300 print:border-none print:mt-0 print:pt-0">
+                        <h4 class="text-lg font-bold text-gray-900 mb-2">
+                            <span data-lang="ms">Soalan 2 (Kes Khas I) - 15 Markah</span>
+                            <span data-lang="en" class="hidden">Question 2 (Special Case I) - 15 Marks</span>
+                        </h4>
+                        <p class="text-gray-800 mb-4">
+                            <span data-lang="ms">Tentukan kestabilan sistem yang mempunyai persamaan ciri berikut:</span>
+                            <span data-lang="en" class="hidden">Determine the stability of the system that has the following characteristic equation:</span>
+                            <br><span class="font-mono text-lg font-semibold block mt-2 ml-4">\( P(s) = s^4 + 2s^3 + s^2 + 2s + 3 = 0 \)</span>
+                        </p>
+                        <p class="text-sm text-gray-600 mb-2"><em>
+                            <span data-lang="ms">Ambil perhatian: Gunakan kaedah epsilon (\( \epsilon \)) jika anda menemui nilai sifar pada lajur pertama.</span>
+                            <span data-lang="en" class="hidden">Note: Use the epsilon (\( \epsilon \)) method if you encounter a zero value in the first column.</span>
+                        </em></p>
+                        <div class="working-space h-80 border-2 border-dashed border-gray-300 rounded-lg w-full bg-gray-50/50"></div>
+                    </div>
+
+                    <!-- Question 3 -->
+                    <div class="page-break mt-12 pt-8 border-t border-dashed border-gray-300 print:border-none print:mt-0 print:pt-0">
+                        <h4 class="text-lg font-bold text-gray-900 mb-2">
+                            <span data-lang="ms">Soalan 3 (Kes Khas II) - 15 Markah</span>
+                            <span data-lang="en" class="hidden">Question 3 (Special Case II) - 15 Marks</span>
+                        </h4>
+                        <p class="text-gray-800 mb-4">
+                            <span data-lang="ms">Siasat kestabilan sistem yang diwakili oleh persamaan ciri di bawah:</span>
+                            <span data-lang="en" class="hidden">Investigate the stability of the system represented by the characteristic equation below:</span>
+                            <br><span class="font-mono text-lg font-semibold block mt-2 ml-4">\( P(s) = s^4 + 2s^3 + 6s^2 + 8s + 8 = 0 \)</span>
+                        </p>
+                        <p class="text-sm text-gray-600 mb-2"><em>
+                            <span data-lang="ms">Ambil perhatian: Tunjukkan proses pembentukan Persamaan Bantuan (Auxiliary Equation) dan pembezaannya jika wujud baris sifar (row of zeros).</span>
+                            <span data-lang="en" class="hidden">Note: Show the process of forming the Auxiliary Equation and its differentiation if a row of zeros exists.</span>
+                        </em></p>
+                        <div class="working-space h-80 border-2 border-dashed border-gray-300 rounded-lg w-full bg-gray-50/50"></div>
+                    </div>
+
+                    <!-- Submission Note -->
+                    <div class="mt-8 text-center text-sm font-semibold text-gray-500 pt-8 border-t border-gray-300 print:text-black">
+                        <span data-lang="ms">Hujung Kertas Soalan. Sila imbas (scan) dan muat naik kertas jawapan anda ke dalam Sistem Author.</span>
+                        <span data-lang="en" class="hidden">End of Question Paper. Please scan and upload your answer sheet to the Author System.</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-6 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 text-center text-sm">
+            <p data-lang="ms">&copy; 2024 Portal Pembelajaran Sistem Kawalan. Dibangunkan untuk membantu pelajar kejuruteraan.</p>
+            <p data-lang="en" class="hidden">&copy; 2024 Control Systems Learning Portal. Developed to assist engineering students.</p>
+        </div>
+    </footer>
+
+    <!-- Script for Logic -->
+    <script>
+        let currentLang = 'ms';
+
+        // Toggle Language Logic
+        function toggleLanguage() {
+            currentLang = currentLang === 'ms' ? 'en' : 'ms';
+            
+            // Update toggle button text
+            document.getElementById('lang-toggle-text').innerText = currentLang === 'ms' ? 'EN' : 'BM';
+            
+            // Toggle MS elements
+            document.querySelectorAll('[data-lang="ms"]').forEach(el => {
+                if (currentLang === 'ms') el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            
+            // Toggle EN elements
+            document.querySelectorAll('[data-lang="en"]').forEach(el => {
+                if (currentLang === 'en') el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            // Regenerate input placeholders/labels to match language
+            generateInputs();
+
+            // Re-render table and analysis if a result exists
+            if (!document.getElementById('result-container').classList.contains('hidden')) {
+                calculateRouth();
+            }
+
+            // MathJax re-render in case display block toggle messed up equations
+            if(window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        function switchTab(tabId) {
+            const tabs = ['teori', 'kalkulator', 'kuiz'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const content = document.getElementById(`content-${t}`);
+                if (t === tabId) {
+                    btn.classList.replace('tab-inactive', 'tab-active');
+                    content.classList.remove('hidden');
+                } else {
+                    btn.classList.replace('tab-active', 'tab-inactive');
+                    content.classList.add('hidden');
+                }
+            });
+            
+            if(tabId === 'teori' && window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        function generateInputs() {
+            const degree = parseInt(document.getElementById('degree').value);
+            const container = document.getElementById('input-container');
+            
+            // Preserve existing values if any before re-generating
+            let existingVals = {};
+            for (let i = 0; i <= 7; i++) {
+                let el = document.getElementById(`coeff-${i}`);
+                if(el) existingVals[i] = el.value;
+            }
+
+            container.innerHTML = ''; 
+
+            for (let i = degree; i >= 0; i--) {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200';
+                
+                const label = document.createElement('label');
+                label.className = 'font-mono text-gray-700 font-semibold w-12';
+                label.innerHTML = `s<sup>${i}</sup>`;
+                
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.step = 'any'; 
+                input.id = `coeff-${i}`;
+                input.className = 'w-32 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-right';
+                
+                input.placeholder = currentLang === 'ms' ? `Pekali a${i}` : `Coeff a${i}`;
+                
+                if (existingVals[i] !== undefined) {
+                    input.value = existingVals[i];
+                } else if(i === degree) {
+                    input.value = 1; 
+                }
+
+                row.appendChild(label);
+                row.appendChild(input);
+                container.appendChild(row);
+            }
+        }
+
+        function calculateRouth() {
+            const degree = parseInt(document.getElementById('degree').value);
+            let coeffs = [];
+            
+            for (let i = degree; i >= 0; i--) {
+                const val = parseFloat(document.getElementById(`coeff-${i}`).value);
+                if (isNaN(val)) {
+                    let msg = currentLang === 'ms' ? `Sila masukkan nilai yang sah untuk s^${i}` : `Please enter a valid value for s^${i}`;
+                    alert(msg);
+                    return;
+                }
+                coeffs.push(val); 
+            }
+
+            let eqHTML = '';
+            for (let i = 0; i <= degree; i++) {
+                let power = degree - i;
+                let c = coeffs[i];
+                if (c === 0 && degree !== 0) continue; 
+                if (eqHTML !== '') eqHTML += (c > 0) ? ' + ' : ' - ';
+                else if (c < 0) eqHTML += '-';
+                
+                let absC = Math.abs(c);
+                if (absC !== 1 || power === 0) eqHTML += absC;
+                
+                if (power > 1) eqHTML += `s<sup>${power}</sup>`;
+                else if (power === 1) eqHTML += `s`;
+            }
+            if (eqHTML === '') eqHTML = '0';
+            eqHTML += ' = 0';
+            document.getElementById('char-eq-display').innerHTML = eqHTML;
+
+            let rows = degree + 1;
+            let routh = [];
+            for (let i = 0; i < rows; i++) routh[i] = [];
+
+            let index0 = 0, index1 = 0;
+            for (let i = 0; i < coeffs.length; i++) {
+                if (i % 2 === 0) routh[0][index0++] = coeffs[i];
+                else routh[1][index1++] = coeffs[i];
+            }
+
+            let cols = Math.max(routh[0].length, routh[1].length);
+            while (routh[0].length < cols) routh[0].push(0);
+            while (routh[1].length < cols) routh[1].push(0);
+
+            const epsilon = 0.000001; 
+            let specialCaseZero = false;
+            let specialCaseRowZero = false;
+
+            if (Math.abs(routh[1][0]) < 1e-9 && routh[1].some(val => Math.abs(val) > 1e-9)) {
+                routh[1][0] = epsilon;
+                specialCaseZero = true;
+            }
+
+            for (let i = 2; i < rows; i++) {
+                let isRowZero = true;
+                for (let j = 0; j < cols - 1; j++) {
+                    let a1 = routh[i - 2][0];
+                    let a2 = routh[i - 2][j + 1] || 0;
+                    let b1 = routh[i - 1][0];
+                    let b2 = routh[i - 1][j + 1] || 0;
+
+                    let val = ((b1 * a2) - (a1 * b2)) / b1;
+                    val = Math.round(val * 1e5) / 1e5; 
+                    routh[i].push(val);
+
+                    if (Math.abs(val) > 1e-9) isRowZero = false; 
+                }
+                routh[i].push(0); 
+
+                if (isRowZero) {
+                    specialCaseRowZero = true;
+                    let power = degree - (i - 1); 
+                    for (let j = 0; j < cols - 1; j++) {
+                        let coeff = routh[i - 1][j];
+                        let termPower = power - 2 * j;
+                        routh[i][j] = termPower > 0 ? (coeff * termPower) : 0;
+                    }
+                } else if (Math.abs(routh[i][0]) < 1e-9) {
+                    routh[i][0] = epsilon;
+                    specialCaseZero = true;
+                }
+            }
+
+            let signChanges = 0;
+            let firstCol = [];
+            for (let i = 0; i < rows; i++) firstCol.push(routh[i][0]);
+
+            for (let i = 0; i < firstCol.length - 1; i++) {
+                let current = firstCol[i];
+                let next = firstCol[i + 1];
+                if (Math.sign(current) !== 0 && Math.sign(next) !== 0 && Math.sign(current) !== Math.sign(next)) {
+                    signChanges++;
+                }
+            }
+
+            renderTable(degree, routh, cols);
+            renderAnalysis(signChanges, specialCaseZero, specialCaseRowZero);
+
+            document.getElementById('result-placeholder').classList.add('hidden');
+            document.getElementById('result-container').classList.remove('hidden');
+        }
+
+        function renderTable(degree, routh, cols) {
+            const table = document.getElementById('routh-table');
+            let hTitle = currentLang === 'ms' ? 'Kuasa' : 'Power';
+            let c1Title = currentLang === 'ms' ? 'Lajur 1' : 'Column 1';
+            let cPrefix = currentLang === 'ms' ? 'Lajur' : 'Col';
+
+            let html = '<thead class="bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">';
+            html += `<tr><th class="p-3 w-20 border-r border-gray-200">${hTitle}</th>`;
+            html += `<th class="p-3 w-32 border-r border-gray-200 bg-blue-50 text-blue-800" title="First Column">${c1Title}</th>`;
+            for(let c = 1; c < cols; c++) {
+                html += `<th class="p-3">${cPrefix} ${c+1}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+
+            for (let i = 0; i <= degree; i++) {
+                let power = degree - i;
+                html += `<tr class="border-b border-gray-100 hover:bg-gray-50">`;
+                html += `<td class="p-3 font-mono font-bold text-gray-600 bg-gray-50 border-r border-gray-200">s<sup>${power}</sup></td>`;
+                
+                for (let j = 0; j < cols; j++) {
+                    let val = routh[i][j];
+                    let displayVal = val;
+                    if(val === 0.000001) displayVal = 'ε (≈0)';
+                    else if (val !== undefined && !isNaN(val)) displayVal = parseFloat(val.toFixed(4));
+                    else displayVal = '';
+
+                    if (j === 0) {
+                        let textClass = 'text-gray-800 font-semibold';
+                        if (val < 0) textClass = 'text-red-600 font-bold'; 
+                        else if (val > 0 && val !== 0.000001) textClass = 'text-green-600 font-bold';
+                        html += `<td class="p-3 border-r border-gray-200 bg-blue-50/30 ${textClass}">${displayVal}</td>`;
+                    } else {
+                        html += `<td class="p-3 text-gray-700">${displayVal !== '' ? displayVal : '-'}</td>`;
+                    }
+                }
+                html += `</tr>`;
+            }
+            html += '</tbody>';
+            table.innerHTML = html;
+        }
+
+        function renderAnalysis(signChanges, specialCaseZero, specialCaseRowZero) {
+            const alertBox = document.getElementById('stability-alert');
+            let icon = '';
+            let title = '';
+            let desc = '';
+            let classes = '';
+
+            if (signChanges === 0) {
+                classes = 'bg-green-50 border-green-200 text-green-800';
+                icon = '<i class="fas fa-check-circle text-2xl text-green-500 mt-1 mr-4"></i>';
+                title = currentLang === 'ms' ? 'Sistem Stabil' : 'Stable System';
+                desc = currentLang === 'ms' 
+                    ? `Tiada pertukaran tanda pada lajur pertama. Oleh itu, tiada punca berada di Satah Separuh Kanan (RHP).`
+                    : `No sign changes in the first column. Therefore, no poles are located in the Right Half-Plane (RHP).`;
+            } else {
+                classes = 'bg-red-50 border-red-200 text-red-800';
+                icon = '<i class="fas fa-exclamation-triangle text-2xl text-red-500 mt-1 mr-4"></i>';
+                title = currentLang === 'ms' ? 'Sistem TIDAK Stabil' : 'Unstable System';
+                desc = currentLang === 'ms'
+                    ? `Terdapat <strong>${signChanges} pertukaran tanda</strong> pada lajur pertama. Ini bermaksud terdapat <strong>${signChanges} punca</strong> terletak di Satah Separuh Kanan (RHP).`
+                    : `There are <strong>${signChanges} sign changes</strong> in the first column. This means there are <strong>${signChanges} poles</strong> located in the Right Half-Plane (RHP).`;
+            }
+
+            let specialText = '';
+            if (specialCaseZero) {
+                let note = currentLang === 'ms'
+                    ? 'Sistem mengesan nilai Sifar (0) di lajur pertama dan menggantikannya dengan nilai epsilon (ε ≈ 0).'
+                    : 'System detected a Zero (0) in the first column and replaced it with epsilon (ε ≈ 0).';
+                specialText += `<div class="mt-3 p-3 bg-white/60 border border-yellow-200 rounded text-sm text-yellow-800"><i class="fas fa-info-circle mr-1 text-yellow-600"></i> <strong>Case-I Detected:</strong> ${note}</div>`;
+            }
+            if (specialCaseRowZero) {
+                if (signChanges === 0) {
+                    title = currentLang === 'ms' ? 'Sistem Marginally Stabil' : 'Marginally Stable System';
+                    classes = 'bg-blue-50 border-blue-200 text-blue-800';
+                    icon = '<i class="fas fa-wave-square text-2xl text-blue-500 mt-1 mr-4"></i>';
+                    desc = currentLang === 'ms'
+                        ? 'Tiada pertukaran tanda, tetapi wujud baris sifar (punca pada paksi bayangan).'
+                        : 'No sign changes, but a row of zeros exists (roots on imaginary axis).';
+                }
+                let note2 = currentLang === 'ms'
+                    ? 'Sistem mengesan baris sifar (Row of Zeros). Persamaan Bantuan (Auxiliary Equation) telah diterbitkan untuk menggantikan baris sifar.'
+                    : 'System detected a Row of Zeros. The Auxiliary Equation was differentiated to replace the zero row.';
+                specialText += `<div class="mt-3 p-3 bg-white/60 border border-purple-200 rounded text-sm text-purple-800"><i class="fas fa-magic mr-1 text-purple-600"></i> <strong>Case-II Detected:</strong> ${note2}</div>`;
+            }
+
+            alertBox.className = `p-4 rounded-lg flex items-start border shadow-sm w-full ${classes}`;
+            alertBox.innerHTML = `
+                ${icon}
+                <div class="w-full">
+                    <h5 class="font-bold text-lg mb-1">${title}</h5>
+                    <p class="text-sm">${desc}</p>
+                    ${specialText}
+                </div>
+            `;
+        }
+
+        window.onload = () => {
+            generateInputs();
+        };
+    </script>
+</body>
+</html>
